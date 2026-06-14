@@ -1,0 +1,61 @@
+:root {
+  --rose: #C17A5E;
+  --rose-hover: #A86548;
+  --rose-light: #F5EDE8;
+  --rose-text: #8B5E4A;
+  --bg-page: #F5F0EB;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --text-primary: #2C1810;
+  --text-secondary: #6B5B53;
+  --text-muted: #9C8880;
+  --border: #E8DDD8;
+  --border-input: #D4C5BF;
+  --watermark: rgba(193, 122, 94, 0.08);
+  --paid-bg: #D4EDDA;
+  --paid-text: #155724;
+  --pending-bg: #FFF3CD;
+  --pending-text: #856404;
+  --overdue-bg: #F8D7DA;
+  --overdue-text: #721C24;
+  --active-bg: #D4EDDA;
+  --active-text: #155724;
+  --inactive-bg: #E2E3E5;
+  --inactive-text: #383D41;
+  --scheduled-bg: #CCE5FF;
+  --scheduled-text: #004085;
+  --sent-bg: #D4EDDA;
+  --sent-text: #155724;
+  --failed-bg: #F8D7DA;
+  --failed-text: #721C24;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
