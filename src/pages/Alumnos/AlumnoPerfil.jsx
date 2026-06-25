@@ -105,7 +105,7 @@ export default function AlumnoPerfilPage() {
           Registrar Pago
         </Button>
         <Button variant="secondary">
-          Enviar WhatsApp Ahora
+          Enviar WhatsApp Ahora 
         </Button>
       </div>
     </div>
