@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useProgramacionMensajes, useEliminarProgramacionMensaje } from '../../hooks/useProgramacionMensajes';
+import { formatDate, formatTime } from '../../utils/formatters';
 
 export default function WhatsappIndexPage() {
   const navigate = useNavigate();
@@ -30,14 +31,14 @@ export default function WhatsappIndexPage() {
   const pagination = programacionesData?.pagination || {};
 
   const columns = [
-    { key: 'alumno_nombre', label: 'Student' },
-    { key: 'dia_envio', label: 'Send Day' },
-    { key: 'hora_envio', label: 'Send Time' },
-    { key: 'mensaje', label: 'Message' },
-    { key: 'activo', label: 'Status', render: (row) => <Badge status={row.activo ? 'PAGADO' : 'PENDIENTE'} /> },
+    { key: 'alumno_nombre', label: 'Alumno' },
+    { key: 'fecha_envio', label: 'Fecha de Envío', render: (row) => formatDate(row.fecha_envio) },
+    { key: 'hora_envio', label: 'Hora de Envío', render: (row) => formatTime(row.hora_envio) },
+    { key: 'mensaje', label: 'Mensaje' },
+    { key: 'activo', label: 'Estado', render: (row) => <Badge status={row.activo ? 'PROGRAMADO' : 'PENDIENTE'} /> },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
           <button onClick={() => navigate(`/whatsapp/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
@@ -53,15 +54,15 @@ export default function WhatsappIndexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="WhatsApp Scheduling" />
+      <PageHeader title="Programación de WhatsApp" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/whatsapp/nuevo')}>
-          New Message
+          Nuevo Mensaje
         </Button>
       </div>
 
       <div className="grid gap-4">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search messages..." />
+        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar mensajes..." />
       </div>
 
       {isLoading ? (
@@ -69,7 +70,7 @@ export default function WhatsappIndexPage() {
           <Spinner size="lg" />
         </div>
       ) : programaciones.length === 0 ? (
-        <EmptyState title="No messages found" actionLabel="Create Message" onAction={() => navigate('/whatsapp/nuevo')} />
+        <EmptyState title="No se encontraron mensajes" actionLabel="Crear Mensaje" onAction={() => navigate('/whatsapp/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={programaciones} />
@@ -79,8 +80,8 @@ export default function WhatsappIndexPage() {
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete Message"
-        message="Are you sure you want to delete this message?"
+        title="Eliminar Mensaje"
+        message="¿Estás seguro de que deseas eliminar este mensaje?"
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

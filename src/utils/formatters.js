@@ -22,3 +22,8 @@ export const formatRUT = (rut) => {
   const body = clean.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   return `${body}-${dv}`;
 };
+
+export const formatTime = (time) => {
+  if (!time) return '-';
+  return String(time).slice(0, 5);
+};

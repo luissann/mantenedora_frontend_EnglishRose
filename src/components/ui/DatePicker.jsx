@@ -15,11 +15,13 @@ export function DatePicker({ value, onChange, label, error, placeholder = 'DD/MM
     onChange(date);
   };
 
+  const DatePickerComponent = DatePickerLib.default || DatePickerLib;
+
   return (
     <div className="space-y-2">
       {label && <span className="text-sm text-text-secondary">{label}</span>}
       <div className="relative">
-        <DatePickerLib
+        <DatePickerComponent
           selected={selectedDate}
           onChange={handleChange}
           dateFormat="dd/MM/yyyy"
