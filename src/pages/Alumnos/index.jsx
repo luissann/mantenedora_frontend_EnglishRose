@@ -24,13 +24,21 @@ export default function AlumnosPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [deleteId, setDeleteId] = useState(null);
 
-  const { data: alumnosData, isLoading } = useAlumnos({
-    nombre: search,
-    id_plan: planFilter,
-    activo: statusFilter,
-    page,
-    limit,
-  });
+ const {
+  data: alumnosData,
+  isLoading,
+  error,
+} = useAlumnos({
+  nombre: search,
+  id_plan: planFilter,
+  activo: statusFilter,
+  page,
+  limit,
+});
+
+console.log("ALUMNOS:", alumnosData);
+console.log("ERROR:", error);
+
   const { data: planesData } = usePlanes();
   const deleteMutation = useEliminarAlumno();
 
@@ -43,10 +51,15 @@ export default function AlumnosPage() {
   }));
 
   const columns = [
-    { key: 'nombre_completo', label: 'Full Name' },
+    { key: 'nombre', label: 'Full Name' },
+    {key: 'segundo_nombre', label: 'Second Name'},
     { key: 'telefono', label: 'Phone' },
     { key: 'email', label: 'Email' },
-    { key: 'plan_nombre', label: 'Plan' },
+    {
+      key: 'plan',
+      label: 'Plan',
+      render: (row) => row.plan?.nombre || 'Sin plan'
+    },
     { key: 'estado_pago', label: 'Payment Status', render: (row) => <Badge status={row.estado_pago} /> },
     { key: 'fecha_vencimiento', label: 'Monthly Expiration Date', render: (row) => formatDate(row.fecha_vencimiento) },
     {

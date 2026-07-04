@@ -1,8 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Users, GraduationCap } from 'lucide-react';
+
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -10,17 +12,18 @@ import { Select } from '../../components/ui/Select';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
+
 import { useActualizarAlumno, useAlumno } from '../../hooks/useAlumnos';
 import { usePlanes } from '../../hooks/usePlanes';
 
 const schema = z.object({
-  nombre: z.string().min(1, 'First name required'),
+  nombre: z.string().min(1),
   segundo_nombre: z.string().optional(),
-  apellido: z.string().min(1, 'Last name required'),
+  apellido: z.string().min(1),
   segundo_apellido: z.string().optional(),
-  telefono: z.string().min(1, 'Phone required'),
-  email: z.string().email('Valid email required'),
-  id_plan: z.string().min(1, 'Plan required'),
+  telefono: z.string().min(1),
+  email: z.string().email(),
+  id_plan: z.string().min(1),
   activo: z.boolean(),
   fecha_ingreso: z.date().or(z.string()),
   observaciones: z.string().optional(),
@@ -29,19 +32,42 @@ const schema = z.object({
 export default function AlumnoEditarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: alumnoData, isLoading } = useAlumno(id);
+
+  const { data: alumnoRes, isLoading } = useAlumno(id);
   const { data: planesData } = usePlanes();
   const updateMutation = useActualizarAlumno();
+
+  const alumno = alumnoRes?.data; // 🔥 FIX CLAVE
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    if (!alumno) return;
+
+    reset({
+      nombre: alumno.nombre ?? '',
+      segundo_nombre: alumno.segundo_nombre ?? '',
+      apellido: alumno.apellido ?? '',
+      segundo_apellido: alumno.segundo_apellido ?? '',
+      telefono: alumno.telefono ?? '',
+      email: alumno.email ?? '',
+      id_plan: alumno.id_plan ? String(alumno.id_plan) : '',
+      activo: Boolean(alumno.activo),
+      fecha_ingreso: alumno.fecha_ingreso
+        ? new Date(alumno.fecha_ingreso)
+        : '',
+      observaciones: alumno.observaciones ?? '',
+    });
+  }, [alumno, reset]);
 
   if (isLoading) {
     return (
@@ -51,19 +77,22 @@ export default function AlumnoEditarPage() {
     );
   }
 
-  const alumno = alumnoData?.data || {};
-  const planes = (planesData?.data || []).map((p) => ({ value: p.id, label: p.nombre }));
+  const planes = (planesData?.data || []).map((p) => ({
+    value: String(p.id),
+    label: p.nombre,
+  }));
+
   const activo = watch('activo');
 
   const onSubmit = async (values) => {
-    try {
-      await updateMutation.mutateAsync({
-        id,
-        ...values,
-        activo: values.activo ? 1 : 0,
-      });
-      navigate(`/alumnos/${id}`);
-    } catch {}
+    await updateMutation.mutateAsync({
+      id,
+      ...values,
+      id_plan: Number(values.id_plan),
+      activo: values.activo ? 1 : 0,
+    });
+
+    navigate(`/alumnos/${id}`);
   };
 
   return (
@@ -71,22 +100,26 @@ export default function AlumnoEditarPage() {
       <PageHeader title="Edit Student" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
         <Card watermark>
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-rose" />
               <h3 className="text-lg font-semibold">Personal Information</h3>
             </div>
+
             <div className="grid gap-4 md:grid-cols-3">
-              <Input label="First Name" {...register('nombre')} error={errors.nombre?.message} />
+              <Input label="First Name" {...register('nombre')} />
               <Input label="Middle Name" {...register('segundo_nombre')} />
-              <Input label="Last Name" {...register('apellido')} error={errors.apellido?.message} />
+              <Input label="Last Name" {...register('apellido')} />
             </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <Input label="Second Last Name" {...register('segundo_apellido')} />
-              <Input label="Phone Number" {...register('telefono')} error={errors.telefono?.message} />
+              <Input label="Phone" {...register('telefono')} />
             </div>
-            <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+
+            <Input label="Email" {...register('email')} />
           </div>
         </Card>
 
@@ -96,6 +129,7 @@ export default function AlumnoEditarPage() {
               <GraduationCap className="h-5 w-5 text-rose" />
               <h3 className="text-lg font-semibold">Academic Information</h3>
             </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <Select
                 label="Plan"
@@ -103,39 +137,58 @@ export default function AlumnoEditarPage() {
                 value={watch('id_plan')}
                 onChange={(value) => setValue('id_plan', value)}
                 searchable
-                error={errors.id_plan?.message}
               />
+
               <div>
-                <p className="mb-2 text-sm text-text-secondary">Active Status</p>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2">
-                    <input type="radio" value="true" onChange={(e) => setValue('activo', e.target.value === 'true')} checked={activo === true} />
-                    <span>Active</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" value="false" onChange={(e) => setValue('activo', e.target.value === 'true')} checked={activo === false} />
-                    <span>Inactive</span>
-                  </label>
-                </div>
+                <p className="mb-2 text-sm text-text-secondary">Active</p>
+                <label>
+                  <input
+                    type="radio"
+                    checked={activo === true}
+                    onChange={() => setValue('activo', true)}
+                  />
+                  Active
+                </label>
+
+                <label>
+                  <input
+                    type="radio"
+                    checked={activo === false}
+                    onChange={() => setValue('activo', false)}
+                  />
+                  Inactive
+                </label>
               </div>
             </div>
-            <DatePicker label="Enrollment Date" value={watch('fecha_ingreso')} onChange={(date) => setValue('fecha_ingreso', date)} />
-            <div>
-              <label className="text-sm text-text-secondary">Notes</label>
-              <textarea
-                {...register('observaciones')}
-                className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
-                rows={4}
-              />
-            </div>
+
+            <DatePicker
+              label="Enrollment Date"
+              value={watch('fecha_ingreso')}
+              onChange={(date) => setValue('fecha_ingreso', date)}
+            />
+
+            <textarea
+              {...register('observaciones')}
+              className="w-full rounded-xl border p-3"
+              rows={4}
+            />
           </div>
         </Card>
 
-        <div className="flex gap-3 justify-end">
-          <Button type="button" variant="secondary" onClick={() => navigate(`/alumnos/${id}`)}>
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate(`/alumnos/${id}`)}
+          >
             Cancel
           </Button>
-          <Button type="submit" variant="primary" loading={isSubmitting || updateMutation.isPending}>
+
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isSubmitting || updateMutation.isPending}
+          >
             Save Changes
           </Button>
         </div>
