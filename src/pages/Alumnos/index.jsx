@@ -51,20 +51,20 @@ console.log("ERROR:", error);
   }));
 
   const columns = [
-    { key: 'nombre', label: 'Full Name' },
-    {key: 'segundo_nombre', label: 'Second Name'},
-    { key: 'telefono', label: 'Phone' },
-    { key: 'email', label: 'Email' },
+    { key: 'nombre', label: 'Nombre Completo' },
+    { key: 'segundo_nombre', label: 'Segundo Nombre'},
+    { key: 'telefono', label: 'Teléfono' },
+    { key: 'email', label: 'Correo' },
     {
       key: 'plan',
       label: 'Plan',
       render: (row) => row.plan?.nombre || 'Sin plan'
     },
-    { key: 'estado_pago', label: 'Payment Status', render: (row) => <Badge status={row.estado_pago} /> },
-    { key: 'fecha_vencimiento', label: 'Monthly Expiration Date', render: (row) => formatDate(row.fecha_vencimiento) },
+    { key: 'estado_pago', label: 'Estado de Pago', render: (row) => <Badge status={row.estado_pago} /> },
+    { key: 'fecha_vencimiento', label: 'Vencimiento Mensual', render: (row) => formatDate(row.fecha_vencimiento) },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
           <button onClick={() => navigate(`/alumnos/${row.id}`)} className="text-blue-600 hover:text-blue-800">
@@ -83,31 +83,31 @@ console.log("ERROR:", error);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Students" />
+      <PageHeader title="Alumnos" />
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/alumnos/nuevo')}>
-            New Student
+            Nuevo Alumno
           </Button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
-          <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student by name or email..." />
+          <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar alumno por nombre o correo..." />
           <Select
             options={planes}
             value={planFilter}
             onChange={setPlanFilter}
-            placeholder="Filter by plan"
+            placeholder="Filtrar por plan"
             searchable
           />
           <Select
             options={[
-              { value: 'true', label: 'Active' },
-              { value: 'false', label: 'Inactive' },
+              { value: 'true', label: 'Activo' },
+              { value: 'false', label: 'Inactivo' },
             ]}
             value={statusFilter}
             onChange={setStatusFilter}
-            placeholder="Filter by status"
+            placeholder="Filtrar por estado"
           />
         </div>
       </div>
@@ -117,7 +117,7 @@ console.log("ERROR:", error);
           <Spinner size="lg" />
         </div>
       ) : alumnos.length === 0 ? (
-        <EmptyState title="No students found" actionLabel="Create Student" onAction={() => navigate('/alumnos/nuevo')} />
+        <EmptyState title="No se encontraron alumnos" actionLabel="Crear Alumno" onAction={() => navigate('/alumnos/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={alumnos} />
@@ -127,8 +127,8 @@ console.log("ERROR:", error);
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete Student"
-        message="Are you sure you want to delete this student? This action cannot be undone."
+        title="Eliminar Alumno"
+        message="¿Estás seguro de que deseas eliminar este alumno? Esta acción no se puede deshacer."
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

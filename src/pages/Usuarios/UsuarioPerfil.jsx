@@ -23,7 +23,7 @@ export default function UsuarioPerfilPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="User Profile" />
+      <PageHeader title="Perfil de Usuario" />
 
       <Card watermark relative>
         <div className="space-y-6">

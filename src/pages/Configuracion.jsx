@@ -7,9 +7,9 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 
 const schema = z.object({
-  nombre_institucion: z.string().min(1, 'Institution name required'),
-  email_soporte: z.string().email('Valid email required'),
-  telefono_soporte: z.string().min(1, 'Support phone required'),
+  nombre_institucion: z.string().min(1, 'Nombre de institución requerido'),
+  email_soporte: z.string().email('Correo válido requerido'),
+  telefono_soporte: z.string().min(1, 'Teléfono de soporte requerido'),
 });
 
 export default function ConfiguracionPage() {
@@ -28,7 +28,7 @@ export default function ConfiguracionPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" />
+      <PageHeader title="Configuración" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card watermark>
@@ -42,7 +42,7 @@ export default function ConfiguracionPage() {
 
         <div className="flex gap-3 justify-end">
           <Button type="submit" variant="primary" loading={isSubmitting}>
-            Save Settings
+            Guardar Configuración
           </Button>
         </div>
       </form>

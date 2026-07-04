@@ -60,7 +60,7 @@ export default function PagosIndexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Payments" />
+      <PageHeader title="Pagos" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/pagos/nuevo')}>
           New Payment
@@ -68,7 +68,7 @@ export default function PagosIndexPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search payments..." />
+        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar pagos..." />
         <Select
           options={[
             { value: 'PAGADO', label: 'Paid' },
@@ -86,7 +86,7 @@ export default function PagosIndexPage() {
           <Spinner size="lg" />
         </div>
       ) : pagos.length === 0 ? (
-        <EmptyState title="No payments found" actionLabel="Create Payment" onAction={() => navigate('/pagos/nuevo')} />
+        <EmptyState title="No se encontraron pagos" actionLabel="Crear Pago" onAction={() => navigate('/pagos/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={pagos} />
@@ -96,8 +96,8 @@ export default function PagosIndexPage() {
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete Payment"
-        message="Are you sure you want to delete this payment?"
+        title="Eliminar Pago"
+        message="¿Estás seguro de que deseas eliminar este pago?"
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

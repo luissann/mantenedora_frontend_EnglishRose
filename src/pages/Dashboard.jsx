@@ -27,7 +27,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Dashboard" />
+      <PageHeader title="Panel Principal" />
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard icon={Users} label="Total Alumnos" value={dashboard.totalAlumnos || '0'} color="rose" />
         <StatCard icon={UserCheck} label="Alumnos Activos" value={dashboard.alumnosActivos || '0'} color="green" />

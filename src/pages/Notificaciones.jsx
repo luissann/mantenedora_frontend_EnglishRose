@@ -22,7 +22,7 @@ export default function NotificacionesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Notifications" />
+      <PageHeader title="Notificaciones" />
 
       <div className="space-y-3">
         {notifications.map((notif) => (

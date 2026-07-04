@@ -53,7 +53,7 @@ export default function PlanesIndexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Plans" />
+      <PageHeader title="Planes" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/planes/nuevo')}>
           New Plan
@@ -61,7 +61,7 @@ export default function PlanesIndexPage() {
       </div>
 
       <div className="grid gap-4">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search plans..." />
+        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar planes..." />
       </div>
 
       {isLoading ? (
@@ -69,7 +69,7 @@ export default function PlanesIndexPage() {
           <Spinner size="lg" />
         </div>
       ) : planes.length === 0 ? (
-        <EmptyState title="No plans found" actionLabel="Create Plan" onAction={() => navigate('/planes/nuevo')} />
+        <EmptyState title="No se encontraron planes" actionLabel="Crear Plan" onAction={() => navigate('/planes/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={planes} />
@@ -79,8 +79,8 @@ export default function PlanesIndexPage() {
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete Plan"
-        message="Are you sure you want to delete this plan?"
+        title="Eliminar Plan"
+        message="¿Estás seguro de que deseas eliminar este plan?"
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

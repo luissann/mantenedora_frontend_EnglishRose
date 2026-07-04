@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/dashboard', label: 'Panel Principal', icon: LayoutDashboard },
   { to: '/alumnos', label: 'Alumnos', icon: GraduationCap },
   { to: '/pagos', label: 'Pagos', icon: CreditCard },
   { to: '/planes', label: 'Planes', icon: Layers },

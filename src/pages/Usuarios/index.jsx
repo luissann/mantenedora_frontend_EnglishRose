@@ -58,7 +58,7 @@ export default function UsuariosIndexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Users" />
+      <PageHeader title="Usuarios" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/usuarios/nuevo')}>
           New User
@@ -66,7 +66,7 @@ export default function UsuariosIndexPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users..." />
+        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar usuarios..." />
         <Select
           options={[
             { value: 'Admin', label: 'Admin' },
@@ -85,7 +85,7 @@ export default function UsuariosIndexPage() {
           <Spinner size="lg" />
         </div>
       ) : usuarios.length === 0 ? (
-        <EmptyState title="No users found" actionLabel="Create User" onAction={() => navigate('/usuarios/nuevo')} />
+        <EmptyState title="No se encontraron usuarios" actionLabel="Crear Usuario" onAction={() => navigate('/usuarios/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={usuarios} />
@@ -95,8 +95,8 @@ export default function UsuariosIndexPage() {
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete User"
-        message="Are you sure you want to delete this user?"
+        title="Eliminar Usuario"
+        message="¿Estás seguro de que deseas eliminar este usuario?"
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

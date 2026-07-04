@@ -36,7 +36,7 @@ export default function AlumnoPerfilPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Student Profile" />
+      <PageHeader title="Perfil del Alumno" />
 
       <Card relative watermark>
         <div className="grid gap-6 md:grid-cols-3">

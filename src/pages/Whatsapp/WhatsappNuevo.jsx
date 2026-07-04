@@ -45,8 +45,8 @@ export default function WhatsappNuevoPage() {
   });
 
   const alumnos = (alumnosData?.data || []).map((a) => ({
-    value: a.id,
-    label: a.nombre_completo,
+    value: String(a.id),
+    label: `${a.nombre} ${a.apellido}`,
   }));
 
   const onSubmit = async (values) => {

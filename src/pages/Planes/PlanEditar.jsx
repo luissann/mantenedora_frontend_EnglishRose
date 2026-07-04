@@ -10,10 +10,10 @@ import { Spinner } from '../../components/ui/Spinner';
 import { useActualizarPlan, usePlan } from '../../hooks/usePlanes';
 
 const schema = z.object({
-  nombre: z.string().min(1, 'Plan name required'),
+  nombre: z.string().min(1, 'Nombre del plan requerido'),
   descripcion: z.string().optional(),
-  precio: z.number().min(0, 'Price required'),
-  duracion_meses: z.number().min(1, 'Duration required'),
+  precio: z.number().min(0, 'Precio requerido'),
+  duracion_meses: z.number().min(1, 'Duración requerida'),
 });
 
 export default function PlanEditarPage() {
@@ -47,31 +47,31 @@ export default function PlanEditarPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit Plan" />
+      <PageHeader title="Editar Plan" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card watermark>
           <div className="space-y-4">
-            <Input label="Plan Name" {...register('nombre')} error={errors.nombre?.message} />
+            <Input label="Nombre del Plan" {...register('nombre')} error={errors.nombre?.message} />
             <div>
-              <label className="text-sm text-text-secondary">Description</label>
+              <label className="text-sm text-text-secondary">Descripción</label>
               <textarea
                 {...register('descripcion')}
                 className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
                 rows={3}
               />
             </div>
-            <Input label="Price" type="number" step="0.01" {...register('precio', { valueAsNumber: true })} error={errors.precio?.message} />
-            <Input label="Duration (months)" type="number" {...register('duracion_meses', { valueAsNumber: true })} error={errors.duracion_meses?.message} />
+            <Input label="Precio" type="number" step="0.01" {...register('precio', { valueAsNumber: true })} error={errors.precio?.message} />
+            <Input label="Duración (meses)" type="number" {...register('duracion_meses', { valueAsNumber: true })} error={errors.duracion_meses?.message} />
           </div>
         </Card>
 
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="secondary" onClick={() => navigate('/planes')}>
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting || updateMutation.isPending}>
-            Save Changes
+            Guardar Cambios
           </Button>
         </div>
       </form>

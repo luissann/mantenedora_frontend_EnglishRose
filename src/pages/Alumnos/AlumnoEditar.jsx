@@ -85,11 +85,19 @@ export default function AlumnoEditarPage() {
   const activo = watch('activo');
 
   const onSubmit = async (values) => {
+    let fechaFormateada = values.fecha_ingreso;
+    if (values.fecha_ingreso instanceof Date) {
+      fechaFormateada = values.fecha_ingreso.toISOString().split('T')[0];
+    } else if (typeof values.fecha_ingreso === 'string' && values.fecha_ingreso.includes('T')) {
+      fechaFormateada = values.fecha_ingreso.split('T')[0];
+    }
+
     await updateMutation.mutateAsync({
       id,
       ...values,
       id_plan: Number(values.id_plan),
-      activo: values.activo ? 1 : 0,
+      activo: !!values.activo,
+      fecha_ingreso: fechaFormateada,
     });
 
     navigate(`/alumnos/${id}`);
@@ -97,7 +105,7 @@ export default function AlumnoEditarPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit Student" />
+      <PageHeader title="Editar Alumno" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -105,21 +113,21 @@ export default function AlumnoEditarPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-rose" />
-              <h3 className="text-lg font-semibold">Personal Information</h3>
+              <h3 className="text-lg font-semibold">Información Personal</h3>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <Input label="First Name" {...register('nombre')} />
-              <Input label="Middle Name" {...register('segundo_nombre')} />
-              <Input label="Last Name" {...register('apellido')} />
+              <Input label="Primer Nombre" {...register('nombre')} />
+              <Input label="Segundo Nombre" {...register('segundo_nombre')} />
+              <Input label="Primer Apellido" {...register('apellido')} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Second Last Name" {...register('segundo_apellido')} />
-              <Input label="Phone" {...register('telefono')} />
+              <Input label="Segundo Apellido" {...register('segundo_apellido')} />
+              <Input label="Teléfono" {...register('telefono')} />
             </div>
 
-            <Input label="Email" {...register('email')} />
+            <Input label="Correo Eléctronico" {...register('email')} />
           </div>
         </Card>
 
@@ -127,7 +135,7 @@ export default function AlumnoEditarPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <GraduationCap className="h-5 w-5 text-rose" />
-              <h3 className="text-lg font-semibold">Academic Information</h3>
+              <h3 className="text-lg font-semibold">Información Académica</h3>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -140,7 +148,7 @@ export default function AlumnoEditarPage() {
               />
 
               <div>
-                <p className="mb-2 text-sm text-text-secondary">Active</p>
+                <p className="mb-2 text-sm text-text-secondary">Activo</p>
                 <label>
                   <input
                     type="radio"
@@ -162,7 +170,7 @@ export default function AlumnoEditarPage() {
             </div>
 
             <DatePicker
-              label="Enrollment Date"
+              label="Fecha de Ingreso"
               value={watch('fecha_ingreso')}
               onChange={(date) => setValue('fecha_ingreso', date)}
             />
@@ -189,7 +197,7 @@ export default function AlumnoEditarPage() {
             variant="primary"
             loading={isSubmitting || updateMutation.isPending}
           >
-            Save Changes
+            Guardar Cambios
           </Button>
         </div>
       </form>

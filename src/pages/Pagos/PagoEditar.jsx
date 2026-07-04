@@ -13,11 +13,11 @@ import { useActualizarPago, usePago } from '../../hooks/usePagos';
 import { useAlumnos } from '../../hooks/useAlumnos';
 
 const schema = z.object({
-  id_alumno: z.string().min(1, 'Student required'),
-  monto: z.number().min(0, 'Amount required'),
+  id_alumno: z.string().min(1, 'Alumno requerido'),
+  monto: z.number().min(0, 'Monto requerido'),
   fecha_pago: z.date().or(z.string()),
-  metodo_pago: z.string().min(1, 'Payment method required'),
-  estado: z.string().min(1, 'Status required'),
+  metodo_pago: z.string().min(1, 'Método de pago requerido'),
+  estado: z.string().min(1, 'Estado requerido'),
   referencia: z.string().optional(),
 });
 
@@ -47,8 +47,8 @@ export default function PagoEditarPage() {
   }
 
   const alumnos = (alumnosData?.data || []).map((a) => ({
-    value: a.id,
-    label: a.nombre_completo,
+    value: String(a.id),
+    label: `${a.nombre} ${a.apellido}`,
   }));
 
   const onSubmit = async (values) => {
@@ -60,26 +60,26 @@ export default function PagoEditarPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit Payment" />
+      <PageHeader title="Editar Pago" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card watermark>
           <div className="grid gap-4 md:grid-cols-2">
             <Select
-              label="Student"
+              label="Alumno"
               options={alumnos}
               value={watch('id_alumno')}
               onChange={(value) => setValue('id_alumno', value)}
               searchable
               error={errors.id_alumno?.message}
             />
-            <Input label="Amount" type="number" step="0.01" {...register('monto', { valueAsNumber: true })} error={errors.monto?.message} />
+            <Input label="Monto" type="number" step="0.01" {...register('monto', { valueAsNumber: true })} error={errors.monto?.message} />
           </div>
         </Card>
 
         <Card watermark>
           <div className="grid gap-4 md:grid-cols-2">
-            <DatePicker label="Payment Date" value={watch('fecha_pago')} onChange={(date) => setValue('fecha_pago', date)} />
+            <DatePicker label="Fecha de Pago" value={watch('fecha_pago')} onChange={(date) => setValue('fecha_pago', date)} />
             <Select
               label="Payment Method"
               options={[
@@ -93,7 +93,7 @@ export default function PagoEditarPage() {
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Select
-              label="Status"
+              label="Estado"
               options={[
                 { value: 'PAGADO', label: 'Paid' },
                 { value: 'PENDIENTE', label: 'Pending' },
@@ -102,7 +102,7 @@ export default function PagoEditarPage() {
               value={watch('estado')}
               onChange={(value) => setValue('estado', value)}
             />
-            <Input label="Reference" {...register('referencia')} />
+            <Input label="Referencia" {...register('referencia')} />
           </div>
         </Card>
 
@@ -111,7 +111,7 @@ export default function PagoEditarPage() {
             Cancel
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting || updateMutation.isPending}>
-            Save Changes
+            Guardar Cambios
           </Button>
         </div>
       </form>

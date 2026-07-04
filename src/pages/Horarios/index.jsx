@@ -48,7 +48,7 @@ export default function HorariosIndexPage() {
       label: (
         <SortableHeader
           column="alumno_nombre"
-          label="Student"
+          label="Alumno"
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
@@ -60,7 +60,7 @@ export default function HorariosIndexPage() {
       label: (
         <SortableHeader
           column="dia_semana"
-          label="Day"
+          label="Día"
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
@@ -72,7 +72,7 @@ export default function HorariosIndexPage() {
       label: (
         <SortableHeader
           column="hora_inicio"
-          label="Start Time"
+          label="Hora de Inicio"
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
@@ -84,7 +84,7 @@ export default function HorariosIndexPage() {
       label: (
         <SortableHeader
           column="hora_fin"
-          label="End Time"
+          label="Hora de Fin"
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
@@ -93,7 +93,7 @@ export default function HorariosIndexPage() {
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
           <button onClick={() => navigate(`/horarios/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
@@ -109,15 +109,15 @@ export default function HorariosIndexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Class Schedules" />
+      <PageHeader title="Horarios de Clases" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/horarios/nuevo')}>
-          New Schedule
+          Nuevo Horario
         </Button>
       </div>
 
       <div className="grid gap-4">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search schedules..." />
+        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar horarios..." />
       </div>
 
       {isLoading ? (
@@ -125,7 +125,7 @@ export default function HorariosIndexPage() {
           <Spinner size="lg" />
         </div>
       ) : horarios.length === 0 ? (
-        <EmptyState title="No schedules found" actionLabel="Create Schedule" onAction={() => navigate('/horarios/nuevo')} />
+        <EmptyState title="No se encontraron horarios" actionLabel="Crear Horario" onAction={() => navigate('/horarios/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={horarios} />
@@ -135,8 +135,8 @@ export default function HorariosIndexPage() {
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete Schedule"
-        message="Are you sure you want to delete this schedule?"
+        title="Eliminar Horario"
+        message="¿Estás seguro de que deseas eliminar este horario?"
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

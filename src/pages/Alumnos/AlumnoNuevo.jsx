@@ -13,13 +13,13 @@ import { useCrearAlumno } from '../../hooks/useAlumnos';
 import { usePlanes } from '../../hooks/usePlanes';
 
 const schema = z.object({
-  nombre: z.string().min(1, 'First name required'),
+  nombre: z.string().min(1, 'El primer nombre es requerido'),
   segundo_nombre: z.string().optional(),
-  apellido: z.string().min(1, 'Last name required'),
+  apellido: z.string().min(1, 'El apellido es requerido'),
   segundo_apellido: z.string().optional(),
-  telefono: z.string().min(1, 'Phone required'),
-  email: z.string().email('Valid email required'),
-  id_plan: z.string().min(1, 'Plan required'),
+  telefono: z.string().min(1, 'Teléfono requerido'),
+  email: z.string().email('Correo válido requerido'),
+  id_plan: z.string().min(1, 'Plan requerido'),
   activo: z.boolean(),
   fecha_ingreso: z.date().or(z.string()),
   observaciones: z.string().optional(),
@@ -52,14 +52,21 @@ export default function AlumnoNuevoPage() {
     },
   });
 
-  const planes = (planesData?.data || []).map((p) => ({ value: p.id, label: p.nombre }));
+  const planes = (planesData?.data || []).map((p) => ({ value: String(p.id), label: p.nombre }));
   const activo = watch('activo');
 
   const onSubmit = async (values) => {
     try {
+      let fechaFormateada = values.fecha_ingreso;
+      if (values.fecha_ingreso instanceof Date) {
+        fechaFormateada = values.fecha_ingreso.toISOString().split('T')[0];
+      }
+
       await createMutation.mutateAsync({
         ...values,
-        activo: values.activo ? 1 : 0,
+        id_plan: Number(values.id_plan),
+        activo: !!values.activo,
+        fecha_ingreso: fechaFormateada,
       });
       navigate('/alumnos');
     } catch {}
@@ -67,25 +74,25 @@ export default function AlumnoNuevoPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Create Student" />
+      <PageHeader title="Crear Alumno" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card watermark relative>
           <div className="space-y-6">
             <div className="flex items-center gap-2 text-text-primary">
               <Users className="h-5 w-5 text-rose" />
-              <h3 className="text-lg font-semibold">Personal Information</h3>
+              <h3 className="text-lg font-semibold">Información Personal</h3>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <Input label="First Name" {...register('nombre')} error={errors.nombre?.message} />
-              <Input label="Middle Name" {...register('segundo_nombre')} />
-              <Input label="Last Name" {...register('apellido')} error={errors.apellido?.message} />
+              <Input label="Primer Nombre" {...register('nombre')} error={errors.nombre?.message} />
+              <Input label="Segundo Nombre" {...register('segundo_nombre')} />
+              <Input label="Primer Apellido" {...register('apellido')} error={errors.apellido?.message} />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Second Last Name" {...register('segundo_apellido')} />
+              <Input label="Segundo Apellido" {...register('segundo_apellido')} />
               <Input label="Phone Number" {...register('telefono')} error={errors.telefono?.message} />
             </div>
-            <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+            <Input label="Correo Eléctronico" type="email" {...register('email')} error={errors.email?.message} />
           </div>
         </Card>
 
@@ -93,7 +100,7 @@ export default function AlumnoNuevoPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-2 text-text-primary">
               <GraduationCap className="h-5 w-5 text-rose" />
-              <h3 className="text-lg font-semibold">Academic Information</h3>
+              <h3 className="text-lg font-semibold">Información Académica</h3>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Select
@@ -105,27 +112,27 @@ export default function AlumnoNuevoPage() {
                 error={errors.id_plan?.message}
               />
               <div>
-                <p className="mb-2 text-sm text-text-secondary">Active Status</p>
+                <p className="mb-2 text-sm text-text-secondary">Estado de Actividad</p>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2">
                     <input type="radio" {...register('activo')} value="true" onChange={(e) => setValue('activo', e.target.value === 'true')} checked={activo === true} />
-                    <span>Active</span>
+                    <span>Activo</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="radio" {...register('activo')} value="false" onChange={(e) => setValue('activo', e.target.value === 'true')} checked={activo === false} />
-                    <span>Inactive</span>
+                    <span>Inactivo</span>
                   </label>
                 </div>
               </div>
             </div>
-            <DatePicker label="Enrollment Date" value={watch('fecha_ingreso')} onChange={(date) => setValue('fecha_ingreso', date)} />
+            <DatePicker label="Fecha de Ingreso" value={watch('fecha_ingreso')} onChange={(date) => setValue('fecha_ingreso', date)} />
             <div>
-              <label className="text-sm text-text-secondary">Notes</label>
+              <label className="text-sm text-text-secondary">Notas</label>
               <textarea
                 {...register('observaciones')}
                 className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
                 rows={4}
-                placeholder="Add any notes about the student..."
+                placeholder="Agrega notas sobre el alumno..."
               />
             </div>
           </div>
@@ -136,7 +143,7 @@ export default function AlumnoNuevoPage() {
             Cancel
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting || createMutation.isPending}>
-            Save Student
+            Guardar Alumno
           </Button>
         </div>
       </form>

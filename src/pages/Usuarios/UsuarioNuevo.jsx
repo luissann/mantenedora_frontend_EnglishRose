@@ -10,11 +10,11 @@ import { Button } from '../../components/ui/Button';
 import { useCrearUsuario } from '../../hooks/useUsuarios';
 
 const schema = z.object({
-  nombre: z.string().min(1, 'First name required'),
-  apellido: z.string().min(1, 'Last name required'),
-  email: z.string().email('Valid email required'),
-  rut: z.string().min(1, 'RUT required'),
-  rol: z.string().min(1, 'Role required'),
+  nombre: z.string().min(1, 'El primer nombre es requerido'),
+  apellido: z.string().min(1, 'El apellido es requerido'),
+  email: z.string().email('Correo válido requerido'),
+  rut: z.string().min(1, 'RUT requerido'),
+  rol: z.string().min(1, 'Rol requerido'),
   clave: z.string().min(6, 'Password must be at least 6 characters'),
   activo: z.boolean(),
 });
@@ -56,20 +56,20 @@ export default function UsuarioNuevoPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Create User" />
+      <PageHeader title="Crear Usuario" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card watermark>
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <Input label="First Name" {...register('nombre')} error={errors.nombre?.message} />
-              <Input label="Last Name" {...register('apellido')} error={errors.apellido?.message} />
+              <Input label="Primer Nombre" {...register('nombre')} error={errors.nombre?.message} />
+              <Input label="Primer Apellido" {...register('apellido')} error={errors.apellido?.message} />
             </div>
-            <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+            <Input label="Correo Eléctronico" type="email" {...register('email')} error={errors.email?.message} />
             <Input label="RUT" {...register('rut')} error={errors.rut?.message} />
-            <Input label="Password" type="password" {...register('clave')} error={errors.clave?.message} />
+            <Input label="Contraseña" type="password" {...register('clave')} error={errors.clave?.message} />
             <Select
-              label="Role"
+              label="Rol"
               options={[
                 { value: 'Admin', label: 'Admin' },
                 { value: 'Coordinator', label: 'Coordinator' },
@@ -81,7 +81,7 @@ export default function UsuarioNuevoPage() {
               error={errors.rol?.message}
             />
             <div>
-              <p className="mb-2 text-sm text-text-secondary">Active</p>
+              <p className="mb-2 text-sm text-text-secondary">Activo</p>
               <label className="flex items-center gap-2">
                 <input type="checkbox" {...register('activo')} checked={activo} onChange={(e) => setValue('activo', e.target.checked)} />
                 <span>Activate user</span>
