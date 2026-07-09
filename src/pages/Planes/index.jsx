@@ -11,7 +11,7 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { usePlanes, useEliminarPlan } from '../../hooks/usePlanes';
-import { formatCLP } from '../../utils/formatters';
+import { formatCLP, formatUSD } from '../../utils/formatters';
 
 export default function PlanesIndexPage() {
   const navigate = useNavigate();
@@ -31,13 +31,15 @@ export default function PlanesIndexPage() {
   const pagination = planesData?.pagination || {};
 
   const columns = [
-    { key: 'nombre', label: 'Plan Name' },
-    { key: 'descripcion', label: 'Description' },
-    { key: 'precio', label: 'Price', render: (row) => formatCLP(row.precio) },
-    { key: 'duracion_meses', label: 'Duration (months)' },
+    { key: 'nombre', label: 'Nombre del Plan' },
+    { key: 'descripcion', label: 'Descripción' },
+    { key: 'precio_clp', label: 'Precio CLP', render: (row) => formatCLP(row.precio_clp) },
+    { key: 'precio_usd', label: 'Precio USD', render: (row) => formatUSD(row.precio_usd) },
+    { key: 'clases_semana', label: 'Clases por semana' },
+    { key: 'activo', label: 'Estado', render: (row) => <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${row.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>{row.activo ? 'Activo' : 'Inactivo'}</span> },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
           <button onClick={() => navigate(`/planes/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
@@ -56,7 +58,7 @@ export default function PlanesIndexPage() {
       <PageHeader title="Planes" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/planes/nuevo')}>
-          New Plan
+          Nuevo Plan
         </Button>
       </div>
 

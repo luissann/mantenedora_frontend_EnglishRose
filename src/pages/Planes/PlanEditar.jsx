@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +13,10 @@ import { useActualizarPlan, usePlan } from '../../hooks/usePlanes';
 const schema = z.object({
   nombre: z.string().min(1, 'Nombre del plan requerido'),
   descripcion: z.string().optional(),
-  precio: z.number().min(0, 'Precio requerido'),
-  duracion_meses: z.number().min(1, 'Duración requerida'),
+  precio_clp: z.coerce.number().min(0, 'Precio CLP requerido'),
+  precio_usd: z.coerce.number().min(0, 'Precio USD requerido'),
+  clases_semana: z.coerce.number().min(0, 'Clases por semana requerido'),
+  activo: z.coerce.boolean(),
 });
 
 export default function PlanEditarPage() {
@@ -25,10 +28,34 @@ export default function PlanEditarPage() {
   const {
     register,
     handleSubmit,
+    reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      nombre: '',
+      descripcion: '',
+      precio_clp: 0,
+      precio_usd: 0,
+      clases_semana: 0,
+      activo: true,
+    },
   });
+
+  useEffect(() => {
+    if (!planData?.data) return;
+    const plan = planData.data;
+    reset({
+      nombre: plan.nombre || '',
+      descripcion: plan.descripcion || '',
+      precio_clp: Number(plan.precio_clp || 0),
+      precio_usd: Number(plan.precio_usd || 0),
+      clases_semana: Number(plan.clases_semana || 0),
+      activo: Boolean(plan.activo),
+    });
+  }, [planData, reset]);
 
   if (isLoading) {
     return (
@@ -38,9 +65,15 @@ export default function PlanEditarPage() {
     );
   }
 
+  const activo = watch('activo');
+
   const onSubmit = async (values) => {
     try {
-      await updateMutation.mutateAsync({ id, ...values });
+      await updateMutation.mutateAsync({
+        id,
+        ...values,
+        activo: values.activo ? 1 : 0,
+      });
       navigate('/planes');
     } catch {}
   };
@@ -61,8 +94,16 @@ export default function PlanEditarPage() {
                 rows={3}
               />
             </div>
-            <Input label="Precio" type="number" step="0.01" {...register('precio', { valueAsNumber: true })} error={errors.precio?.message} />
-            <Input label="Duración (meses)" type="number" {...register('duracion_meses', { valueAsNumber: true })} error={errors.duracion_meses?.message} />
+            <Input label="Precio CLP" type="number" step="0.01" {...register('precio_clp', { valueAsNumber: true })} error={errors.precio_clp?.message} />
+            <Input label="Precio USD" type="number" step="0.01" {...register('precio_usd', { valueAsNumber: true })} error={errors.precio_usd?.message} />
+            <Input label="Clases por semana" type="number" {...register('clases_semana', { valueAsNumber: true })} error={errors.clases_semana?.message} />
+            <div>
+              <p className="mb-2 text-sm text-text-secondary">Estado</p>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={activo} onChange={(e) => setValue('activo', e.target.checked)} />
+                <span>Plan activo</span>
+              </label>
+            </div>
           </div>
         </Card>
 

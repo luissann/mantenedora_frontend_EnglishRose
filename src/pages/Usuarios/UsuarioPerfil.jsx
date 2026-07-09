@@ -20,6 +20,7 @@ export default function UsuarioPerfilPage() {
   }
 
   const usuario = data?.data || {};
+  const nombreCompleto = [usuario.nombre, usuario.segundo_nombre, usuario.apellido, usuario.segundo_apellido].filter(Boolean).join(' ');
 
   return (
     <div className="space-y-6">
@@ -30,7 +31,7 @@ export default function UsuarioPerfilPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Nombre Completo</p>
-              <p className="text-lg font-semibold text-text-primary">{usuario.nombre_completo}</p>
+              <p className="text-lg font-semibold text-text-primary">{nombreCompleto || usuario.nombre_completo || 'Sin nombre'}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">RUT</p>
@@ -40,26 +41,28 @@ export default function UsuarioPerfilPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Correo Electrónico</p>
-              <p className="text-sm text-text-primary">{usuario.email}</p>
+              <p className="text-sm text-text-primary">{usuario.email || 'Sin correo'}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Rol</p>
-              <Badge status={usuario.rol} />
+              <span className="text-sm font-semibold text-text-primary">
+                {usuario.rol === 'Admin' ? 'Administrador' : usuario.rol === 'Coordinator' ? 'Coordinador' : usuario.rol === 'Teacher' ? 'Profesor' : usuario.rol === 'Staff' ? 'Personal' : usuario.rol || 'Sin rol'}
+              </span>
             </div>
           </div>
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Estado</p>
-            <Badge status={usuario.activo ? 'PAGADO' : 'PENDIENTE'} />
+            <Badge status={usuario.activo ? 'Active' : 'Inactive'} />
           </div>
         </div>
       </Card>
 
       <div className="flex gap-3 justify-end">
         <Button variant="secondary" onClick={() => navigate('/usuarios')}>
-          Back
+          Volver
         </Button>
         <Button variant="primary" onClick={() => navigate(`/usuarios/${id}/editar`)}>
-          Edit User
+          Editar Usuario
         </Button>
       </div>
     </div>

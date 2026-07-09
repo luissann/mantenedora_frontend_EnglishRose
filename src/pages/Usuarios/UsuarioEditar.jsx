@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +13,11 @@ import { useActualizarUsuario, useUsuario } from '../../hooks/useUsuarios';
 
 const schema = z.object({
   nombre: z.string().min(1, 'El primer nombre es requerido'),
+  segundo_nombre: z.string().optional(),
   apellido: z.string().min(1, 'El apellido es requerido'),
+  segundo_apellido: z.string().optional(),
   email: z.string().email('Correo válido requerido'),
+  telefono: z.string().optional(),
   rut: z.string().min(1, 'RUT requerido'),
   rol: z.string().min(1, 'Rol requerido'),
   clave: z.string().optional(),
@@ -31,10 +35,28 @@ export default function UsuarioEditarPage() {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
   });
+
+  React.useEffect(() => {
+    if (!usuarioData?.data) return;
+    const usuario = usuarioData.data;
+    reset({
+      nombre: usuario.nombre || '',
+      segundo_nombre: usuario.segundo_nombre || '',
+      apellido: usuario.apellido || '',
+      segundo_apellido: usuario.segundo_apellido || '',
+      email: usuario.email || '',
+      telefono: usuario.telefono || '',
+      rut: usuario.rut || '',
+      rol: usuario.rol || 'Staff',
+      clave: '',
+      activo: Boolean(usuario.activo),
+    });
+  }, [usuarioData, reset]);
 
   if (isLoading) {
     return (
@@ -68,16 +90,21 @@ export default function UsuarioEditarPage() {
               <Input label="Primer Nombre" {...register('nombre')} error={errors.nombre?.message} />
               <Input label="Primer Apellido" {...register('apellido')} error={errors.apellido?.message} />
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input label="Segundo Nombre" {...register('segundo_nombre')} error={errors.segundo_nombre?.message} />
+              <Input label="Segundo Apellido" {...register('segundo_apellido')} error={errors.segundo_apellido?.message} />
+            </div>
             <Input label="Correo Eléctronico" type="email" {...register('email')} error={errors.email?.message} />
+            <Input label="Teléfono" {...register('telefono')} error={errors.telefono?.message} />
             <Input label="RUT" {...register('rut')} error={errors.rut?.message} />
-            <Input label="Password (leave blank to keep current)" type="password" {...register('clave')} error={errors.clave?.message} />
+            <Input label="Contraseña (dejar en blanco para conservar la actual)" type="password" {...register('clave')} error={errors.clave?.message} />
             <Select
               label="Rol"
               options={[
-                { value: 'Admin', label: 'Admin' },
-                { value: 'Coordinator', label: 'Coordinator' },
-                { value: 'Teacher', label: 'Teacher' },
-                { value: 'Staff', label: 'Staff' },
+                { value: 'Admin', label: 'Administrador' },
+                { value: 'Coordinator', label: 'Coordinador' },
+                { value: 'Teacher', label: 'Profesor' },
+                { value: 'Staff', label: 'Personal' },
               ]}
               value={watch('rol')}
               onChange={(value) => setValue('rol', value)}
@@ -87,7 +114,7 @@ export default function UsuarioEditarPage() {
               <p className="mb-2 text-sm text-text-secondary">Activo</p>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={activo} onChange={(e) => setValue('activo', e.target.checked)} />
-                <span>User is active</span>
+                <span>Usuario activo</span>
               </label>
             </div>
           </div>
@@ -95,7 +122,7 @@ export default function UsuarioEditarPage() {
 
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="secondary" onClick={() => navigate(`/usuarios/${id}`)}>
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting || updateMutation.isPending}>
             Guardar Cambios

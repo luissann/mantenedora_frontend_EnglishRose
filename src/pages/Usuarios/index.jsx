@@ -32,14 +32,36 @@ export default function UsuariosIndexPage() {
   const usuarios = usuariosData?.data || [];
   const pagination = usuariosData?.pagination || {};
 
+  const roleLabel = (value) => {
+    switch (value) {
+      case 'Admin':
+        return 'Administrador';
+      case 'Coordinator':
+        return 'Coordinador';
+      case 'Teacher':
+        return 'Profesor';
+      case 'Staff':
+        return 'Personal';
+      default:
+        return value || 'Sin rol';
+    }
+  };
+
   const columns = [
-    { key: 'nombre_completo', label: 'Full Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'rol', label: 'Role', render: (row) => <Badge status={row.rol} /> },
-    { key: 'activo', label: 'Status', render: (row) => <Badge status={row.activo ? 'PAGADO' : 'PENDIENTE'} /> },
+    {
+      key: 'nombre_completo',
+      label: 'Nombre',
+      render: (row) => {
+        const nombreCompleto = [row.nombre, row.segundo_nombre, row.apellido, row.segundo_apellido].filter(Boolean).join(' ');
+        return nombreCompleto || row.nombre_completo || 'Sin nombre';
+      },
+    },
+    { key: 'email', label: 'Correo' },
+    { key: 'rol', label: 'Rol', render: (row) => <span className="text-sm text-text-primary">{roleLabel(row.rol)}</span> },
+    { key: 'activo', label: 'Estado', render: (row) => <Badge status={row.activo ? 'Active' : 'Inactive'} /> },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
           <button onClick={() => navigate(`/usuarios/${row.id}`)} className="text-blue-600 hover:text-blue-800">
@@ -61,7 +83,7 @@ export default function UsuariosIndexPage() {
       <PageHeader title="Usuarios" />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/usuarios/nuevo')}>
-          New User
+          Nuevo Usuario
         </Button>
       </div>
 
@@ -69,14 +91,14 @@ export default function UsuariosIndexPage() {
         <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar usuarios..." />
         <Select
           options={[
-            { value: 'Admin', label: 'Admin' },
-            { value: 'Coordinator', label: 'Coordinator' },
-            { value: 'Teacher', label: 'Teacher' },
-            { value: 'Staff', label: 'Staff' },
+            { value: 'Admin', label: 'Administrador' },
+            { value: 'Coordinator', label: 'Coordinador' },
+            { value: 'Teacher', label: 'Profesor' },
+            { value: 'Staff', label: 'Personal' },
           ]}
           value={roleFilter}
           onChange={setRoleFilter}
-          placeholder="Filter by role"
+          placeholder="Filtrar por rol"
         />
       </div>
 

@@ -21,6 +21,14 @@ const schema = z.object({
   referencia: z.string().optional(),
 });
 
+const normalizeAlumnosResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.alumnos)) return response.alumnos;
+  if (Array.isArray(response?.items)) return response.items;
+  return [];
+};
+
 export default function PagoEditarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -46,9 +54,9 @@ export default function PagoEditarPage() {
     );
   }
 
-  const alumnos = (alumnosData?.data || []).map((a) => ({
+  const alumnos = normalizeAlumnosResponse(alumnosData).map((a) => ({
     value: String(a.id),
-    label: `${a.nombre} ${a.apellido}`,
+    label: [a.nombre, a.segundo_nombre, a.apellido, a.segundo_apellido].filter(Boolean).join(' ') || a.email || `Alumno ${a.id}`,
   }));
 
   const onSubmit = async (values) => {
@@ -81,11 +89,11 @@ export default function PagoEditarPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <DatePicker label="Fecha de Pago" value={watch('fecha_pago')} onChange={(date) => setValue('fecha_pago', date)} />
             <Select
-              label="Payment Method"
+              label="Método de Pago"
               options={[
-                { value: 'TRANSFERENCIA', label: 'Bank Transfer' },
-                { value: 'EFECTIVO', label: 'Cash' },
-                { value: 'TARJETA', label: 'Credit Card' },
+                { value: 'TRANSFERENCIA', label: 'Transferencia' },
+                { value: 'EFECTIVO', label: 'Efectivo' },
+                { value: 'TARJETA', label: 'Tarjeta' },
               ]}
               value={watch('metodo_pago')}
               onChange={(value) => setValue('metodo_pago', value)}
@@ -95,9 +103,9 @@ export default function PagoEditarPage() {
             <Select
               label="Estado"
               options={[
-                { value: 'PAGADO', label: 'Paid' },
-                { value: 'PENDIENTE', label: 'Pending' },
-                { value: 'VENCIDO', label: 'Overdue' },
+                { value: 'PAGADO', label: 'Pagado' },
+                { value: 'PENDIENTE', label: 'Pendiente' },
+                { value: 'VENCIDO', label: 'Vencido' },
               ]}
               value={watch('estado')}
               onChange={(value) => setValue('estado', value)}
@@ -108,7 +116,7 @@ export default function PagoEditarPage() {
 
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="secondary" onClick={() => navigate('/pagos')}>
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting || updateMutation.isPending}>
             Guardar Cambios

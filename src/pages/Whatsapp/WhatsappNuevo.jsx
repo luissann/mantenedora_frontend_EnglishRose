@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,24 +7,32 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
-import { WhatsappPreview } from '../../components/shared/WhatsappPreview';
 import { useCrearProgramacionMensaje } from '../../hooks/useProgramacionMensajes';
 import { useAlumnos } from '../../hooks/useAlumnos';
 import { DatePicker } from '../../components/ui/DatePicker';
+
+const DEFAULT_MESSAGE = 'Hola, este es un mensaje de WhatsApp programado.';
 
 const schema = z.object({
   id_alumno: z.string().min(1, 'Alumno requerido'),
   fecha_envio: z.date().or(z.string()).refine(val => val !== '', 'Fecha requerida'),
   hora_envio: z.string().min(1, 'Hora requerida'),
-  mensaje: z.string().min(1, 'Mensaje requerido'),
+  mensaje: z.string().optional(),
   activo: z.boolean(),
 });
+
+const normalizeAlumnosResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.alumnos)) return response.alumnos;
+  if (Array.isArray(response?.items)) return response.items;
+  return [];
+};
 
 export default function WhatsappNuevoPage() {
   const navigate = useNavigate();
   const { data: alumnosData } = useAlumnos({ limit: 100 });
   const createMutation = useCrearProgramacionMensaje();
-  const [preview, setPreview] = useState('');
 
   const {
     register,
@@ -39,14 +46,14 @@ export default function WhatsappNuevoPage() {
       id_alumno: '',
       fecha_envio: new Date(),
       hora_envio: '09:00',
-      mensaje: '',
+      mensaje: DEFAULT_MESSAGE,
       activo: true,
     },
   });
 
-  const alumnos = (alumnosData?.data || []).map((a) => ({
+  const alumnos = normalizeAlumnosResponse(alumnosData).map((a) => ({
     value: String(a.id),
-    label: `${a.nombre} ${a.apellido}`,
+    label: [a.nombre, a.segundo_nombre, a.apellido, a.segundo_apellido].filter(Boolean).join(' ') || a.email || `Alumno ${a.id}`,
   }));
 
   const onSubmit = async (values) => {
@@ -54,7 +61,8 @@ export default function WhatsappNuevoPage() {
       const fechaEnvio = values.fecha_envio instanceof Date
         ? values.fecha_envio.toISOString().split('T')[0]
         : values.fecha_envio;
-      await createMutation.mutateAsync({ ...values, fecha_envio: fechaEnvio });
+      const mensaje = values.mensaje?.trim() || DEFAULT_MESSAGE;
+      await createMutation.mutateAsync({ ...values, mensaje, fecha_envio: fechaEnvio });
       navigate('/whatsapp');
     } catch {}
   };
@@ -63,7 +71,7 @@ export default function WhatsappNuevoPage() {
     <div className="space-y-6">
       <PageHeader title="Programar Mensaje WhatsApp" />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="max-w-3xl">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Card watermark>
             <div className="space-y-4">
@@ -83,20 +91,6 @@ export default function WhatsappNuevoPage() {
               />
               <Input label="Hora de Envío" type="time" {...register('hora_envio')} error={errors.hora_envio?.message} />
               <div>
-                <label className="text-sm text-text-secondary">Mensaje</label>
-                <textarea
-                  {...register('mensaje')}
-                  onChange={(e) => {
-                    setPreview(e.target.value);
-                    register('mensaje').onChange(e);
-                  }}
-                  className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
-                  rows={5}
-                  placeholder="Escribe tu mensaje..."
-                />
-                {errors.mensaje && <p className="mt-1 text-xs text-red-600">{errors.mensaje.message}</p>}
-              </div>
-              <div>
                 <p className="mb-2 text-sm text-text-secondary">Estado</p>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" {...register('activo')} />
@@ -115,10 +109,6 @@ export default function WhatsappNuevoPage() {
             </Button>
           </div>
         </form>
-
-        <div>
-          <WhatsappPreview message={preview} />
-        </div>
       </div>
     </div>
   );

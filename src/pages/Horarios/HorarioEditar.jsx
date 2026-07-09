@@ -18,6 +18,14 @@ const schema = z.object({
   hora_fin: z.string().min(1, 'Hora de fin requerida'),
 });
 
+const normalizeAlumnosResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.alumnos)) return response.alumnos;
+  if (Array.isArray(response?.items)) return response.items;
+  return [];
+};
+
 export default function HorarioEditarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,9 +51,9 @@ export default function HorarioEditarPage() {
     );
   }
 
-  const alumnos = (alumnosData?.data || []).map((a) => ({
+  const alumnos = normalizeAlumnosResponse(alumnosData).map((a) => ({
     value: String(a.id),
-    label: `${a.nombre} ${a.apellido}`,
+    label: [a.nombre, a.segundo_nombre, a.apellido, a.segundo_apellido].filter(Boolean).join(' ') || a.email || `Alumno ${a.id}`,
   }));
 
   const onSubmit = async (values) => {

@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useProgramacionMensajes, useEliminarProgramacionMensaje } from '../../hooks/useProgramacionMensajes';
+import { useAlumnos } from '../../hooks/useAlumnos';
 import { formatDate, formatTime } from '../../utils/formatters';
 
 export default function WhatsappIndexPage() {
@@ -25,13 +26,25 @@ export default function WhatsappIndexPage() {
     page,
     limit,
   });
+  const { data: alumnosData } = useAlumnos({ limit: 1000 });
   const deleteMutation = useEliminarProgramacionMensaje();
 
   const programaciones = programacionesData?.data || [];
   const pagination = programacionesData?.pagination || {};
+  const alumnosPorId = new Map((alumnosData?.data || []).map((alumno) => [String(alumno.id), alumno]));
 
   const columns = [
-    { key: 'alumno_nombre', label: 'Alumno' },
+    {
+      key: 'id_alumno',
+      label: 'Alumno',
+      render: (row) => {
+        const alumno = alumnosPorId.get(String(row.id_alumno));
+        const nombreCompleto = [alumno?.nombre, alumno?.segundo_nombre, alumno?.apellido, alumno?.segundo_apellido]
+          .filter(Boolean)
+          .join(' ');
+        return nombreCompleto || row.nombre || 'Sin alumno';
+      },
+    },
     { key: 'fecha_envio', label: 'Fecha de Envío', render: (row) => formatDate(row.fecha_envio) },
     { key: 'hora_envio', label: 'Hora de Envío', render: (row) => formatTime(row.hora_envio) },
     { key: 'mensaje', label: 'Mensaje' },

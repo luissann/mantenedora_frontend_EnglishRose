@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -11,6 +12,7 @@ export default function AlumnoPerfilPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading } = useAlumnoCompleto(id);
+  const [paginaProgramaciones, setPaginaProgramaciones] = useState(1);
 
   if (isLoading) {
     return (
@@ -32,7 +34,19 @@ export default function AlumnoPerfilPage() {
     .join(' ');
 
   const ultimoPago = alumno.pagos?.[0];
-  const programacion = alumno.programaciones?.[0];
+  const programaciones = useMemo(() => {
+    return [...(alumno.programaciones || [])].sort((a, b) => {
+      const fechaA = a.fecha_envio ? new Date(a.fecha_envio).getTime() : 0;
+      const fechaB = b.fecha_envio ? new Date(b.fecha_envio).getTime() : 0;
+      return fechaB - fechaA;
+    });
+  }, [alumno.programaciones]);
+  const hoy = new Date();
+  const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const porPagina = 5;
+  const totalPaginas = Math.max(1, Math.ceil(programaciones.length / porPagina));
+  const paginaActual = Math.min(paginaProgramaciones, totalPaginas);
+  const programacionesPagina = programaciones.slice((paginaActual - 1) * porPagina, paginaActual * porPagina);
 
   return (
     <div className="space-y-6">
@@ -159,24 +173,60 @@ export default function AlumnoPerfilPage() {
             Programación de WhatsApp
           </h3>
 
-          <div className="space-y-2 text-sm">
-            {programacion ? (
+          <div className="space-y-3 text-sm">
+            {programaciones.length ? (
               <>
-                <p>
-                  <span className="text-text-secondary">Día:</span>{' '}
-                  {programacion.dia_envio}
-                </p>
+                {programacionesPagina.map((programacion) => {
+                const fechaProgramada = programacion.fecha_envio ? new Date(programacion.fecha_envio) : null;
+                const yaPasada = fechaProgramada ? fechaProgramada < inicioHoy : false;
 
-                <p>
-                  <span className="text-text-secondary">Hora:</span>{' '}
-                  {programacion.hora_envio}
-                </p>
+                return (
+                  <div key={programacion.id} className="rounded-2xl border border-border-input p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-text-primary">
+                        {formatDate(programacion.fecha_envio)}
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          yaPasada ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                        }`}
+                      >
+                        {yaPasada ? 'Vencida' : 'Pendiente'}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-text-secondary">
+                      Hora: {programacion.hora_envio || '-'}
+                    </p>
+                    <div className="mt-2">
+                      <Badge status={programacion.activo ? 'Programado' : 'Inactivo'} />
+                    </div>
+                  </div>
+                );
+                })}
 
-                <Badge
-                  status={
-                    programacion.activo ? 'Programado' : 'Inactivo'
-                  }
-                />
+                {totalPaginas > 1 && (
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border-input pt-3 text-xs text-text-secondary">
+                    <button
+                      type="button"
+                      onClick={() => setPaginaProgramaciones((p) => Math.max(1, p - 1))}
+                      disabled={paginaActual === 1}
+                      className="rounded-full border border-border-input px-2.5 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Anterior
+                    </button>
+                    <span>
+                      Página {paginaActual} de {totalPaginas}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPaginaProgramaciones((p) => Math.min(totalPaginas, p + 1))}
+                      disabled={paginaActual === totalPaginas}
+                      className="rounded-full border border-border-input px-2.5 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-text-secondary">

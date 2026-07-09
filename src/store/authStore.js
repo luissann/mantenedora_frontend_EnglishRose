@@ -24,10 +24,20 @@ const saveState = (state) => {
   }
 };
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create((set, get) => ({
   ...loadInitialState(),
   login: (token, usuario) => {
     const next = { token, usuario, isAuthenticated: true };
+    set(next);
+    saveState(next);
+  },
+  updateUsuario: (usuarioActualizado) => {
+    const current = get();
+    const next = {
+      ...current,
+      usuario: current.usuario ? { ...current.usuario, ...usuarioActualizado } : usuarioActualizado,
+      isAuthenticated: Boolean(current.token || current.isAuthenticated),
+    };
     set(next);
     saveState(next);
   },
