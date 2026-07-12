@@ -10,6 +10,7 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { DatePicker } from '../../components/ui/DatePicker';
+import { Toggle } from '../../components/ui/Toggle';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 
@@ -82,8 +83,6 @@ export default function AlumnoEditarPage() {
     label: p.nombre,
   }));
 
-  const activo = watch('activo');
-
   const onSubmit = async (values) => {
     let fechaFormateada = values.fecha_ingreso;
     if (values.fecha_ingreso instanceof Date) {
@@ -109,64 +108,49 @@ export default function AlumnoEditarPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
-        <Card watermark>
+        <Card watermark={false}>
           <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-rose" />
+            <div className="flex items-center gap-3 text-text-primary">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-rose-light text-rose">
+                <Users className="h-4 w-4" />
+              </span>
               <h3 className="text-lg font-semibold">Información Personal</h3>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <Input label="Primer Nombre" {...register('nombre')} />
-              <Input label="Segundo Nombre" {...register('segundo_nombre')} />
-              <Input label="Primer Apellido" {...register('apellido')} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input label="Primer Nombre" placeholder="Ej: María" {...register('nombre')} error={errors.nombre?.message} />
+              <Input label="Segundo Nombre" placeholder="Opcional" {...register('segundo_nombre')} />
+              <Input label="Primer Apellido" placeholder="Ej: González" {...register('apellido')} error={errors.apellido?.message} />
+              <Input label="Segundo Apellido" placeholder="Opcional" {...register('segundo_apellido')} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Segundo Apellido" {...register('segundo_apellido')} />
-              <Input label="Teléfono" {...register('telefono')} />
+              <Input label="Teléfono" placeholder="+56 9 1234 5678" {...register('telefono')} error={errors.telefono?.message} />
+              <Input label="Correo Electrónico" placeholder="correo@ejemplo.com" {...register('email')} error={errors.email?.message} />
             </div>
-
-            <Input label="Correo Eléctronico" {...register('email')} />
           </div>
         </Card>
 
-        <Card watermark>
+        <Card watermark={false}>
           <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-rose" />
+            <div className="flex items-center gap-3 text-text-primary">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-rose-light text-rose">
+                <GraduationCap className="h-4 w-4" />
+              </span>
               <h3 className="text-lg font-semibold">Información Académica</h3>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <Select
                 label="Plan"
+                placeholder="Seleccionar plan..."
                 options={planes}
                 value={watch('id_plan')}
                 onChange={(value) => setValue('id_plan', value)}
                 searchable
+                error={errors.id_plan?.message}
               />
-
-              <div>
-                <p className="mb-2 text-sm text-text-secondary">Activo</p>
-                <label>
-                  <input
-                    type="radio"
-                    checked={activo === true}
-                    onChange={() => setValue('activo', true)}
-                  />
-                  Active
-                </label>
-
-                <label>
-                  <input
-                    type="radio"
-                    checked={activo === false}
-                    onChange={() => setValue('activo', false)}
-                  />
-                  Inactive
-                </label>
-              </div>
+              <Toggle label="Estado de Actividad" value={watch('activo')} onChange={(value) => setValue('activo', value)} />
             </div>
 
             <DatePicker
@@ -175,11 +159,15 @@ export default function AlumnoEditarPage() {
               onChange={(date) => setValue('fecha_ingreso', date)}
             />
 
-            <textarea
-              {...register('observaciones')}
-              className="w-full rounded-xl border p-3"
-              rows={4}
-            />
+            <div>
+              <label className="text-sm text-text-secondary">Notas</label>
+              <textarea
+                {...register('observaciones')}
+                className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none transition focus:border-rose focus:ring-2 focus:ring-rose/20"
+                rows={4}
+                placeholder="Agrega notas sobre el alumno..."
+              />
+            </div>
           </div>
         </Card>
 
@@ -189,7 +177,7 @@ export default function AlumnoEditarPage() {
             variant="secondary"
             onClick={() => navigate(`/alumnos/${id}`)}
           >
-            Cancel
+            Cancelar
           </Button>
 
           <Button

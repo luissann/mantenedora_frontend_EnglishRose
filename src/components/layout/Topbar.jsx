@@ -1,34 +1,48 @@
-import { Bell, Smartphone } from 'lucide-react';
+import { Bell, Smartphone, Menu } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import SearchBar from '../ui/SearchBar';
+import { GlobalSearch } from '../shared/GlobalSearch';
 import { WhatsappModal } from '../shared/WhatsappModal';
 import { useWhatsappEstado } from '../../hooks/useWhatsapp';
+import { useNotificaciones } from '../../hooks/useProgramacionMensajes';
 
-export function Topbar() {
+export function Topbar({ onMenuClick }) {
+  const navigate = useNavigate();
   const usuario = useAuthStore((state) => state.usuario);
-  const notificationCount = 3;
+  const { data: fallidosData } = useNotificaciones({ estado_envio: 'FALLIDO', limit: 1 });
+  const notificationCount = fallidosData?.pagination?.total || 0;
   const [modalOpen, setModalOpen] = useState(false);
-  const prevListo = useRef(true);
+  // null = todavía no hemos visto un estado real; evita que la primera
+  // lectura (normalmente "desconectado" mientras arranca) dispare el modal.
+  const prevListo = useRef(null);
 
   // Consultar estado de WhatsApp globalmente
   const { data: waData } = useWhatsappEstado(true);
   const waEstado = waData?.data;
 
-  // Auto-abrir modal si se desconecta repentinamente
+  // Auto-abrir modal sólo si WhatsApp se desconecta DURANTE la sesión
+  // (pasó de conectado a desconectado), nunca en la carga inicial de la app.
   useEffect(() => {
-    if (waEstado && waEstado.listo !== prevListo.current) {
-      if (prevListo.current === true && waEstado.listo === false) {
-        setModalOpen(true); // Se desconectó, abrir modal
-      }
-      prevListo.current = waEstado.listo;
+    if (!waEstado) return;
+    if (prevListo.current === true && waEstado.listo === false) {
+      setModalOpen(true);
     }
+    prevListo.current = waEstado.listo;
   }, [waEstado]);
 
   return (
     <div className="flex h-14 items-center justify-between gap-4 rounded-3xl bg-white border border-border px-5 shadow-sm">
-      <div className="flex-1">
-        <SearchBar placeholder="Buscar alumno, plan, pago..." value="" onChange={() => {}} />
+      <button
+        type="button"
+        onClick={onMenuClick}
+        className="shrink-0 rounded-full p-2 text-text-secondary hover:bg-slate-100 lg:hidden"
+        aria-label="Abrir menú"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      <div className="min-w-0 flex-1">
+        <GlobalSearch />
       </div>
       <div className="flex items-center gap-4">
         <button 
@@ -42,10 +56,19 @@ export function Topbar() {
           )}
         </button>
 
-        <div className="relative">
-          <Bell className="h-5 w-5 text-text-secondary" />
-          <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">{notificationCount}</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate('/notificaciones')}
+          className="relative rounded-full p-2 text-text-secondary hover:bg-slate-100"
+          title="Notificaciones"
+        >
+          <Bell className="h-5 w-5" />
+          {notificationCount > 0 && (
+            <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+              {notificationCount > 9 ? '9+' : notificationCount}
+            </span>
+          )}
+        </button>
         <div className="flex items-center gap-3 rounded-3xl border border-border bg-rose-light px-4 py-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-semibold text-rose">
             {usuario?.nombre?.[0] || 'S'}

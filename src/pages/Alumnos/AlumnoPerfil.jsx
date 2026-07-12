@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Spinner } from '../../components/ui/Spinner';
 import { useAlumnoCompleto } from '../../hooks/useAlumnos';
+import { useEnviarWhatsappAhora } from '../../hooks/useProgramacionMensajes';
 import { formatDate, formatCLP } from '../../utils/formatters';
 
 export default function AlumnoPerfilPage() {
@@ -13,6 +15,18 @@ export default function AlumnoPerfilPage() {
   const navigate = useNavigate();
   const { data, isLoading } = useAlumnoCompleto(id);
   const [paginaProgramaciones, setPaginaProgramaciones] = useState(1);
+  const [mostrarExito, setMostrarExito] = useState(false);
+  const enviarWhatsappAhora = useEnviarWhatsappAhora();
+
+  const alumno = data?.data || {};
+
+  const programaciones = useMemo(() => {
+    return [...(alumno.programaciones || [])].sort((a, b) => {
+      const fechaA = a.fecha_envio ? new Date(a.fecha_envio).getTime() : 0;
+      const fechaB = b.fecha_envio ? new Date(b.fecha_envio).getTime() : 0;
+      return fechaB - fechaA;
+    });
+  }, [alumno.programaciones]);
 
   if (isLoading) {
     return (
@@ -21,8 +35,6 @@ export default function AlumnoPerfilPage() {
       </div>
     );
   }
-
-  const alumno = data?.data || {};
 
   const nombreCompleto = [
     alumno.nombre,
@@ -34,13 +46,6 @@ export default function AlumnoPerfilPage() {
     .join(' ');
 
   const ultimoPago = alumno.pagos?.[0];
-  const programaciones = useMemo(() => {
-    return [...(alumno.programaciones || [])].sort((a, b) => {
-      const fechaA = a.fecha_envio ? new Date(a.fecha_envio).getTime() : 0;
-      const fechaB = b.fecha_envio ? new Date(b.fecha_envio).getTime() : 0;
-      return fechaB - fechaA;
-    });
-  }, [alumno.programaciones]);
   const hoy = new Date();
   const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   const porPagina = 5;
@@ -252,10 +257,34 @@ export default function AlumnoPerfilPage() {
           Registrar Pago
         </Button>
 
-        <Button variant="secondary">
+        <Button
+          variant="secondary"
+          loading={enviarWhatsappAhora.isPending}
+          onClick={() =>
+            enviarWhatsappAhora.mutate(id, {
+              onSuccess: () => setMostrarExito(true),
+            })
+          }
+        >
           Enviar WhatsApp Ahora
         </Button>
       </div>
+
+      <Modal
+        isOpen={mostrarExito}
+        onClose={() => setMostrarExito(false)}
+        title="Mensaje enviado"
+        size="sm"
+      >
+        <p className="text-sm text-text-secondary">
+          Mensaje enviado con éxito a {nombreCompleto || 'el alumno'}.
+        </p>
+        <div className="mt-6 flex justify-end">
+          <Button variant="primary" onClick={() => setMostrarExito(false)}>
+            Aceptar
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

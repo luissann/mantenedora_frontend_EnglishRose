@@ -1,6 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getProgramacionMensajes, getProgramacionMensaje, crearProgramacionMensaje, actualizarProgramacionMensaje, eliminarProgramacionMensaje } from '../api/programacionMensajes';
+import { getProgramacionMensajes, getProgramacionMensaje, crearProgramacionMensaje, actualizarProgramacionMensaje, eliminarProgramacionMensaje, getNotificaciones, enviarWhatsappAhora } from '../api/programacionMensajes';
+
+export function useNotificaciones(filters = {}, options = {}) {
+  return useQuery({
+    queryKey: ['notificaciones', filters],
+    queryFn: () => getNotificaciones(filters),
+    refetchInterval: 60_000, // revisa cada minuto por nuevos envíos
+    ...options,
+  });
+}
 
 export function useProgramacionMensajes(filters = {}) {
   return useQuery({
@@ -42,6 +51,20 @@ export function useActualizarProgramacionMensaje() {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Error al actualizar programación');
+    },
+  });
+}
+
+export function useEnviarWhatsappAhora() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: enviarWhatsappAhora,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Error al enviar el mensaje de WhatsApp');
     },
   });
 }

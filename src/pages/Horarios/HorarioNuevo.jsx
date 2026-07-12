@@ -9,9 +9,11 @@ import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
 import { useCrearHorario } from '../../hooks/useHorarios';
 import { useAlumnos } from '../../hooks/useAlumnos';
+import { useProfesores } from '../../hooks/useProfesores';
 
 const schema = z.object({
   id_alumno: z.string().min(1, 'Alumno requerido'),
+  id_profesor: z.string().optional(),
   dia_semana: z.string().min(1, 'Día requerido'),
   hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
   hora_fin: z.string().min(1, 'Hora de fin requerida'),
@@ -28,6 +30,7 @@ const normalizeAlumnosResponse = (response) => {
 export default function HorarioNuevoPage() {
   const navigate = useNavigate();
   const { data: alumnosData } = useAlumnos({ limit: 100 });
+  const { data: profesoresData } = useProfesores({ limit: 100, activo: 'true' });
   const createMutation = useCrearHorario();
 
   const {
@@ -40,6 +43,7 @@ export default function HorarioNuevoPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       id_alumno: '',
+      id_profesor: '',
       dia_semana: 'LUNES',
       hora_inicio: '09:00',
       hora_fin: '10:00',
@@ -51,9 +55,14 @@ export default function HorarioNuevoPage() {
     label: [a.nombre, a.segundo_nombre, a.apellido, a.segundo_apellido].filter(Boolean).join(' ') || a.email || `Alumno ${a.id}`,
   }));
 
+  const profesores = (profesoresData?.data || []).map((p) => ({
+    value: String(p.id),
+    label: `${p.nombre} ${p.apellido}`,
+  }));
+
   const onSubmit = async (values) => {
     try {
-      await createMutation.mutateAsync(values);
+      await createMutation.mutateAsync({ ...values, id_profesor: values.id_profesor || null });
       navigate('/horarios');
     } catch {}
   };
@@ -72,6 +81,15 @@ export default function HorarioNuevoPage() {
               onChange={(value) => setValue('id_alumno', value)}
               searchable
               error={errors.id_alumno?.message}
+            />
+            <Select
+              label="Profesor"
+              options={profesores}
+              value={watch('id_profesor')}
+              onChange={(value) => setValue('id_profesor', value)}
+              placeholder="Sin profesor asignado"
+              searchable
+              error={errors.id_profesor?.message}
             />
             <Select
               label="Día de la Semana"

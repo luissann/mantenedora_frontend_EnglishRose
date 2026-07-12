@@ -18,7 +18,10 @@ const schema = z.object({
   telefono: z.string().optional(),
   rut: z.string().min(1, 'RUT requerido'),
   rol: z.string().min(1, 'Rol requerido'),
-  clave: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+    .regex(/[0-9]/, 'Debe contener al menos un número'),
   activo: z.boolean(),
 });
 
@@ -42,8 +45,8 @@ export default function UsuarioNuevoPage() {
       email: '',
       telefono: '',
       rut: '',
-      rol: 'Staff',
-      clave: '',
+      rol: 'Admin',
+      password: '',
       activo: true,
     },
   });
@@ -78,15 +81,10 @@ export default function UsuarioNuevoPage() {
             <Input label="Correo Eléctronico" type="email" {...register('email')} error={errors.email?.message} />
             <Input label="Teléfono" {...register('telefono')} error={errors.telefono?.message} />
             <Input label="RUT" {...register('rut')} error={errors.rut?.message} />
-            <Input label="Contraseña" type="password" {...register('clave')} error={errors.clave?.message} />
+            <Input label="Contraseña" type="password" {...register('password')} error={errors.password?.message} />
             <Select
               label="Rol"
-              options={[
-                { value: 'Admin', label: 'Administrador' },
-                { value: 'Coordinator', label: 'Coordinador' },
-                { value: 'Teacher', label: 'Profesor' },
-                { value: 'Staff', label: 'Personal' },
-              ]}
+              options={[{ value: 'Admin', label: 'Administrador' }]}
               value={watch('rol')}
               onChange={(value) => setValue('rol', value)}
               error={errors.rol?.message}

@@ -27,3 +27,8 @@ export const formatTime = (time) => {
   if (!time) return '-';
   return String(time).slice(0, 5);
 };
+
+export const formatDateTime = (d) => {
+  if (!d) return '-';
+  return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: es });
+};

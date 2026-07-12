@@ -12,7 +12,16 @@ export const DIAS_DISPLAY = {
 
 export const ESTADOS_PAGO = ['PAGADO', 'PENDIENTE', 'VENCIDO'];
 
-export const ROLES_USUARIO = ['Admin', 'Coordinator', 'Teacher', 'Staff'];
+// Por ahora sólo existe el rol Admin — se ampliará cuando se definan
+// los demás roles (Coordinador/Profesor/Personal).
+export const ROLES_USUARIO = ['Admin'];
+
+export const ROLES_USUARIO_LABELS = {
+  Admin: 'Administrador',
+  Coordinator: 'Coordinador',
+  Teacher: 'Profesor',
+  Staff: 'Personal',
+};
 
 export const ESTADO_BADGE = {
   PAGADO: { label: 'Pagado', className: 'bg-green-100 text-green-800' },
