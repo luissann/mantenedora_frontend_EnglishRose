@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { PageHeader } from '../../components/shared/PageHeader';
+import { FormErrorSummary } from '../../components/shared/FormErrorSummary';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -20,7 +21,10 @@ const schema = z.object({
   telefono: z.string().optional(),
   rut: z.string().min(1, 'RUT requerido'),
   rol: z.string().min(1, 'Rol requerido'),
-  clave: z.string().optional(),
+  password: z.string().optional().refine(
+    (value) => !value || (value.length >= 8 && /[A-Z]/.test(value) && /[0-9]/.test(value)),
+    'Debe tener 8+ caracteres, una mayúscula y un número'
+  ),
   activo: z.boolean(),
 });
 
@@ -52,8 +56,8 @@ export default function UsuarioEditarPage() {
       email: usuario.email || '',
       telefono: usuario.telefono || '',
       rut: usuario.rut || '',
-      rol: usuario.rol || 'Staff',
-      clave: '',
+      rol: usuario.rol || 'Admin',
+      password: '',
       activo: Boolean(usuario.activo),
     });
   }, [usuarioData, reset]);
@@ -69,10 +73,12 @@ export default function UsuarioEditarPage() {
   const activo = watch('activo');
 
   const onSubmit = async (values) => {
+    const { password, ...rest } = values;
     try {
       await updateMutation.mutateAsync({
         id,
-        ...values,
+        ...rest,
+        ...(password ? { password } : {}),
         activo: values.activo ? 1 : 0,
       });
       navigate(`/usuarios/${id}`);
@@ -84,6 +90,7 @@ export default function UsuarioEditarPage() {
       <PageHeader title="Editar Usuario" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <FormErrorSummary errors={errors} />
         <Card watermark>
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -97,15 +104,10 @@ export default function UsuarioEditarPage() {
             <Input label="Correo Eléctronico" type="email" {...register('email')} error={errors.email?.message} />
             <Input label="Teléfono" {...register('telefono')} error={errors.telefono?.message} />
             <Input label="RUT" {...register('rut')} error={errors.rut?.message} />
-            <Input label="Contraseña (dejar en blanco para conservar la actual)" type="password" {...register('clave')} error={errors.clave?.message} />
+            <Input label="Contraseña (dejar en blanco para conservar la actual)" type="password" {...register('password')} error={errors.password?.message} />
             <Select
               label="Rol"
-              options={[
-                { value: 'Admin', label: 'Administrador' },
-                { value: 'Coordinator', label: 'Coordinador' },
-                { value: 'Teacher', label: 'Profesor' },
-                { value: 'Staff', label: 'Personal' },
-              ]}
+              options={[{ value: 'Admin', label: 'Administrador' }]}
               value={watch('rol')}
               onChange={(value) => setValue('rol', value)}
               error={errors.rol?.message}

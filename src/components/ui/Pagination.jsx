@@ -1,3 +1,5 @@
+import { ChevronDown } from 'lucide-react';
+
 export function Pagination({ pagination, onPageChange, onLimitChange }) {
   const { total, page, limit, totalPages, hasNext, hasPrev } = pagination;
 
@@ -56,19 +58,22 @@ export function Pagination({ pagination, onPageChange, onLimitChange }) {
           {'>>'}
         </button>
       </div>
-      <div className="flex items-center gap-3">
-        <span>Total: {total}</span>
-        <label className="flex items-center gap-2">
-          Items per page:
-          <select
-            value={limit}
-            onChange={(event) => onLimitChange(Number(event.target.value))}
-            className="rounded-2xl border border-border-input bg-white px-3 py-2 text-sm outline-none"
-          >
-            {[10, 25, 50].map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="shrink-0">Total: {total}</span>
+        <label className="flex shrink-0 items-center gap-2">
+          <span className="shrink-0">Items por página:</span>
+          <span className="relative inline-block">
+            <select
+              value={limit}
+              onChange={(event) => onLimitChange(Number(event.target.value))}
+              className="appearance-none rounded-2xl border border-border-input bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
+            >
+              {[10, 25, 50].map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+          </span>
         </label>
       </div>
     </div>

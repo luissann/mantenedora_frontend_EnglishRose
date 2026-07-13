@@ -1,4 +1,4 @@
-export function StatCard({ icon: Icon, label, value, trend, color = 'rose' }) {
+export function StatCard({ icon: Icon, label, value, trend, color = 'rose', className }) {
   const colorStyles = {
     rose: 'text-rose',
     green: 'text-green-600',
@@ -7,7 +7,7 @@ export function StatCard({ icon: Icon, label, value, trend, color = 'rose' }) {
   };
 
   return (
-    <div className="rounded-3xl bg-white p-6 shadow-sm border border-border relative overflow-hidden">
+    <div className={`rounded-3xl bg-white p-6 shadow-sm border border-border relative overflow-hidden ${className || ''}`}>
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-text-secondary">{label}</p>

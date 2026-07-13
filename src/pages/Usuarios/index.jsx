@@ -90,12 +90,7 @@ export default function UsuariosIndexPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar usuarios..." />
         <Select
-          options={[
-            { value: 'Admin', label: 'Administrador' },
-            { value: 'Coordinator', label: 'Coordinador' },
-            { value: 'Teacher', label: 'Profesor' },
-            { value: 'Staff', label: 'Personal' },
-          ]}
+          options={[{ value: 'Admin', label: 'Administrador' }]}
           value={roleFilter}
           onChange={setRoleFilter}
           placeholder="Filtrar por rol"

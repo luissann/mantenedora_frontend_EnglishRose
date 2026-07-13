@@ -1,23 +1,24 @@
-import { LayoutDashboard, GraduationCap, CreditCard, Layers, Clock, MessageCircle, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Clock, MessageCircle, Users, Settings, LogOut, X, UserCog } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 
+// Primera etapa: solo lo pedido (envío de WhatsApp automático + lo mínimo
+// para sostenerlo). Pagos, Planes, Boletas y Pagos a Profesores quedan
+// desarrollados pero ocultos y bloqueados (ver router/index.jsx) para
+// habilitarlos en una etapa siguiente.
 const navItems = [
   { to: '/dashboard', label: 'Panel Principal', icon: LayoutDashboard },
   { to: '/alumnos', label: 'Alumnos', icon: GraduationCap },
-  { to: '/pagos', label: 'Pagos', icon: CreditCard },
-  { to: '/planes', label: 'Planes', icon: Layers },
+  { to: '/profesores', label: 'Profesores', icon: UserCog },
   { to: '/horarios', label: 'Horarios', icon: Clock },
   { to: '/whatsapp', label: 'Programación WhatsApp', icon: MessageCircle },
   { to: '/usuarios', label: 'Usuarios', icon: Users },
   { to: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
-export function Sidebar() {
-  const logout = useAuthStore((state) => state.logout);
-
+function SidebarContent({ logout, onNavigate }) {
   return (
-    <aside className="hidden h-screen w-[220px] flex-col border-r border-border bg-white px-4 py-6 lg:flex">
+    <>
       <div className="mb-10 flex items-center gap-3 px-2">
         <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-rose-light text-rose text-2xl font-playfair">SR</div>
         <div>
@@ -31,6 +32,7 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-medium transition ${
                 isActive ? 'bg-rose-light text-rose' : 'text-text-secondary hover:bg-rose-light/70'
@@ -53,7 +55,44 @@ export function Sidebar() {
           Cerrar sesión
         </button>
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function Sidebar({ isOpen = false, onClose }) {
+  const logout = useAuthStore((state) => state.logout);
+
+  return (
+    <>
+      {/* Sidebar fija en desktop */}
+      <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[220px] flex-col border-r border-border bg-white px-4 py-6 lg:flex">
+        <SidebarContent logout={logout} />
+      </aside>
+
+      {/* Drawer en mobile/tablet */}
+      <div className={`fixed inset-0 z-50 lg:hidden ${isOpen ? '' : 'pointer-events-none'}`}>
+        <div
+          className={`absolute inset-0 bg-black/40 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+        <aside
+          className={`absolute left-0 top-0 flex h-screen w-[260px] flex-col bg-white px-4 py-6 shadow-2xl transition-transform duration-200 ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="mb-4 self-end rounded-full p-2 text-text-secondary hover:bg-rose-light/70"
+            aria-label="Cerrar menú"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <SidebarContent logout={logout} onNavigate={onClose} />
+        </aside>
+      </div>
+    </>
   );
 }
 

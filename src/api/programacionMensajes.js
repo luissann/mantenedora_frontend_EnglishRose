@@ -5,6 +5,11 @@ export async function getProgramacionMensajes(params = {}) {
   return data;
 }
 
+export async function getCalendarioMensual(anio, mes) {
+  const { data } = await client.get('/programacion/calendario', { params: { anio, mes } });
+  return data;
+}
+
 export async function getProgramacionMensaje(id) {
   const { data } = await client.get(`/programacion/${id}`);
   return data;
@@ -22,5 +27,15 @@ export async function actualizarProgramacionMensaje(id, payload) {
 
 export async function eliminarProgramacionMensaje(id) {
   const { data } = await client.delete(`/programacion/${id}`);
+  return data;
+}
+
+export async function getNotificaciones(params = {}) {
+  const { data } = await client.get('/notificaciones', { params });
+  return data;
+}
+
+export async function enviarWhatsappAhora(idAlumno) {
+  const { data } = await client.post(`/alumnos/${idAlumno}/whatsapp/enviar-ahora`);
   return data;
 }

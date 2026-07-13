@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Edit, Trash2, Plus, CalendarDays } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useHorarios, useEliminarHorario } from '../../hooks/useHorarios';
+import { formatTime } from '../../utils/formatters';
 
 export default function HorariosIndexPage() {
   const navigate = useNavigate();
@@ -54,6 +55,12 @@ export default function HorariosIndexPage() {
           onSort={handleSort}
         />
       ),
+      render: (row) => row.alumno ? `${row.alumno.nombre} ${row.alumno.apellido}` : '-',
+    },
+    {
+      key: 'profesor',
+      label: 'Profesor',
+      render: (row) => row.profesor ? `${row.profesor.nombre} ${row.profesor.apellido}` : 'Sin asignar',
     },
     {
       key: 'dia_semana',
@@ -78,6 +85,7 @@ export default function HorariosIndexPage() {
           onSort={handleSort}
         />
       ),
+      render: (row) => formatTime(row.hora_inicio),
     },
     {
       key: 'hora_fin',
@@ -90,6 +98,7 @@ export default function HorariosIndexPage() {
           onSort={handleSort}
         />
       ),
+      render: (row) => formatTime(row.hora_fin),
     },
     {
       key: 'actions',
@@ -113,6 +122,9 @@ export default function HorariosIndexPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/horarios/nuevo')}>
           Nuevo Horario
+        </Button>
+        <Button variant="secondary" leftIcon={<CalendarDays className="h-4 w-4" />} onClick={() => navigate('/horarios/semana')}>
+          Vista Semanal
         </Button>
       </div>
 

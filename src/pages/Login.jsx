@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,8 @@ import { formatRUT } from '../utils/formatters';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { useWhatsappEstado } from '../hooks/useWhatsapp';
+import logo from '../assets/logo-english-rose.jpg';
+import mascota from '../assets/duena-mascota.jpg';
 
 const schema = z.object({
   rut: z.string().min(8, 'El RUT es obligatorio'),
@@ -20,6 +22,20 @@ const schema = z.object({
   ),
 });
 
+function useStarfield(count) {
+  return useMemo(
+    () =>
+      Array.from({ length: count }, () => ({
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        size: Math.random() < 0.15 ? 4 : Math.random() < 0.5 ? 3 : 2,
+        delay: `${(Math.random() * 3.5).toFixed(2)}s`,
+        duration: `${(2.5 + Math.random() * 3).toFixed(2)}s`,
+      })),
+    [count]
+  );
+}
+
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loggedIn, setLoggedIn]         = useState(false);
@@ -28,6 +44,7 @@ export default function Login() {
   const loginStore      = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate        = useNavigate();
+  const stars = useStarfield(45);
 
   // Solo activo tras iniciar sesión para verificar estado de WhatsApp
   const { data: waData } = useWhatsappEstado(loggedIn);
@@ -83,30 +100,82 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-page px-6 py-12">
-      <div className="w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-xl grid grid-cols-1 md:grid-cols-2">
-        {/* Panel izquierdo decorativo */}
-        <div className="bg-gradient-to-b from-rose-light to-[#EDD5C8] p-10 flex flex-col justify-center">
-          <h1 className="font-playfair text-4xl text-rose mb-6">
-            Empowering students through English.
-          </h1>
-          <p className="text-text-secondary max-w-xl">
-            Administra alumnos, planes y mensajes desde un panel moderno
-            diseñado para Sofi Rose Academy.
-          </p>
+    <div className="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-gradient-to-br from-rose-light via-page to-[#EDD5C8]">
+      {/* Constelación en tonos de marca */}
+      <div className="pointer-events-none absolute inset-0">
+        {stars.map((star, i) => (
+          <span
+            key={i}
+            className="absolute rounded-full bg-rose/50 motion-safe:animate-twinkle"
+            style={{
+              top: star.top,
+              left: star.left,
+              width: star.size,
+              height: star.size,
+              animationDelay: star.delay,
+              animationDuration: star.duration,
+            }}
+          />
+        ))}
+
+        {/* Nebulosas suaves */}
+        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-rose/25 blur-3xl" />
+        <div className="absolute -bottom-48 -right-40 h-[30rem] w-[30rem] rounded-full bg-[#EDD5C8]/70 blur-3xl" />
+
+        {/* Estrellas fugaces */}
+        <span
+          className="absolute left-[85%] top-[12%] h-px w-24 -rotate-[25deg] bg-gradient-to-r from-rose/70 via-rose/30 to-transparent motion-safe:animate-shooting"
+          style={{ animationDelay: '0.5s' }}
+        />
+        <span
+          className="absolute left-[70%] top-[55%] h-px w-16 -rotate-[25deg] bg-gradient-to-r from-rose/70 via-rose/30 to-transparent motion-safe:animate-shooting"
+          style={{ animationDelay: '3.2s' }}
+        />
+      </div>
+
+      <div className="relative z-10 h-full w-full overflow-y-auto border border-rose/10 bg-white/85 shadow-[0_25px_80px_-25px_rgba(193,122,94,0.45)] backdrop-blur-xl motion-safe:animate-card-in grid grid-cols-1 md:grid-cols-2">
+        {/* Panel izquierdo: mascota + logo */}
+        <div className="relative flex flex-col items-center justify-center gap-6 border-b border-rose/10 bg-gradient-to-b from-rose-light to-[#EDD5C8] p-10 md:border-b-0 md:border-r">
+          <img
+            src={logo}
+            alt="English Rose Academy"
+            className="h-14 w-14 rounded-full object-cover ring-4 ring-white shadow-md"
+          />
+
+          <div className="relative flex h-60 w-60 items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/70 via-rose/10 to-transparent blur-2xl" />
+            <div className="absolute inset-2 rounded-full border border-rose/30" />
+            <div className="absolute inset-5 rounded-full border border-white/60" />
+            <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -ml-1 -mt-1 rounded-full bg-rose shadow-[0_0_10px_2px_rgba(193,122,94,0.6)] motion-safe:animate-orbit" />
+            <img
+              src={mascota}
+              alt="Directora de English Rose Academy"
+              className="relative h-52 w-52 object-contain motion-safe:animate-float"
+              style={{
+                maskImage: 'radial-gradient(circle, black 62%, transparent 78%)',
+                WebkitMaskImage: 'radial-gradient(circle, black 62%, transparent 78%)',
+              }}
+            />
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-text-secondary">
+              Panel de administración — English Rose Academy
+            </p>
+          </div>
         </div>
 
         {/* Panel derecho: formulario */}
-        <div className="p-10 bg-white flex items-center justify-center">
+        <div className="flex items-center justify-center p-10">
           <div className="w-full max-w-md">
-            <div className="mb-8 text-center">
-              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-rose-light text-rose text-2xl font-semibold">
-                SR
-              </div>
-              <h2 className="mt-4 text-3xl font-playfair text-text-primary">
+            <div className="mb-8 text-center md:text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rose">
+                Base de control
+              </p>
+              <h2 className="mt-2 text-3xl font-playfair text-text-primary">
                 Bienvenida de nuevo
               </h2>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-sm text-text-secondary">
                 Ingresa para administrar tus alumnos y clases
               </p>
             </div>

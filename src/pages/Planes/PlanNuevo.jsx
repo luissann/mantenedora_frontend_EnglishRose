@@ -11,8 +11,10 @@ import { useCrearPlan } from '../../hooks/usePlanes';
 const schema = z.object({
   nombre: z.string().min(1, 'Nombre del plan requerido'),
   descripcion: z.string().optional(),
-  precio: z.number().min(0, 'Precio requerido'),
-  duracion_meses: z.number().min(1, 'Duración requerida'),
+  precio_clp: z.coerce.number().min(0, 'Precio CLP requerido'),
+  precio_usd: z.coerce.number().min(0, 'Precio USD requerido'),
+  clases_semana: z.coerce.number().min(1, 'Clases por semana requeridas'),
+  activo: z.coerce.boolean(),
 });
 
 export default function PlanNuevoPage() {
@@ -22,20 +24,32 @@ export default function PlanNuevoPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       nombre: '',
       descripcion: '',
-      precio: 0,
-      duracion_meses: 1,
+      precio_clp: 0,
+      precio_usd: 0,
+      clases_semana: 1,
+      activo: true,
     },
   });
 
+  const activo = watch('activo');
+
   const onSubmit = async (values) => {
     try {
-      await createMutation.mutateAsync(values);
+      await createMutation.mutateAsync({
+        ...values,
+        precio_clp: Number(values.precio_clp),
+        precio_usd: Number(values.precio_usd),
+        clases_semana: Number(values.clases_semana),
+        activo: values.activo ? 1 : 0,
+      });
       navigate('/planes');
     } catch {}
   };
@@ -56,8 +70,16 @@ export default function PlanNuevoPage() {
                 rows={3}
               />
             </div>
-            <Input label="Precio" type="number" step="0.01" {...register('precio', { valueAsNumber: true })} error={errors.precio?.message} />
-            <Input label="Duración (meses)" type="number" {...register('duracion_meses', { valueAsNumber: true })} error={errors.duracion_meses?.message} />
+            <Input label="Precio CLP" type="number" step="0.01" {...register('precio_clp', { valueAsNumber: true })} error={errors.precio_clp?.message} />
+            <Input label="Precio USD" type="number" step="0.01" {...register('precio_usd', { valueAsNumber: true })} error={errors.precio_usd?.message} />
+            <Input label="Clases por semana" type="number" {...register('clases_semana', { valueAsNumber: true })} error={errors.clases_semana?.message} />
+            <div>
+              <p className="mb-2 text-sm text-text-secondary">Estado</p>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={activo} onChange={(e) => setValue('activo', e.target.checked)} />
+                <span>Plan activo</span>
+              </label>
+            </div>
           </div>
         </Card>
 

@@ -13,7 +13,18 @@ import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useAlumnos, useEliminarAlumno } from '../../hooks/useAlumnos';
 import { usePlanes } from '../../hooks/usePlanes';
-import { formatDate } from '../../utils/formatters';
+import { formatDate, formatTime } from '../../utils/formatters';
+
+const ORDEN_DIAS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+
+function proximaClase(horarios = []) {
+  if (!horarios.length) return 'Sin horario';
+  const [primero] = [...horarios].sort(
+    (a, b) => ORDEN_DIAS.indexOf(a.dia_semana) - ORDEN_DIAS.indexOf(b.dia_semana)
+  );
+  const dia = primero.dia_semana.charAt(0) + primero.dia_semana.slice(1).toLowerCase();
+  return `${dia} ${formatTime(primero.hora_inicio)}`;
+}
 
 export default function AlumnosPage() {
   const navigate = useNavigate();
@@ -24,20 +35,13 @@ export default function AlumnosPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [deleteId, setDeleteId] = useState(null);
 
- const {
-  data: alumnosData,
-  isLoading,
-  error,
-} = useAlumnos({
-  nombre: search,
-  id_plan: planFilter,
-  activo: statusFilter,
-  page,
-  limit,
-});
-
-console.log("ALUMNOS:", alumnosData);
-console.log("ERROR:", error);
+  const { data: alumnosData, isLoading } = useAlumnos({
+    nombre: search,
+    id_plan: planFilter,
+    activo: statusFilter,
+    page,
+    limit,
+  });
 
   const { data: planesData } = usePlanes();
   const deleteMutation = useEliminarAlumno();
@@ -51,8 +55,11 @@ console.log("ERROR:", error);
   }));
 
   const columns = [
-    { key: 'nombre', label: 'Nombre Completo' },
-    { key: 'segundo_nombre', label: 'Segundo Nombre'},
+    {
+      key: 'nombre',
+      label: 'Nombre Completo',
+      render: (row) => [row.nombre, row.segundo_nombre, row.apellido, row.segundo_apellido].filter(Boolean).join(' '),
+    },
     { key: 'telefono', label: 'Teléfono' },
     { key: 'email', label: 'Correo' },
     {
@@ -60,20 +67,25 @@ console.log("ERROR:", error);
       label: 'Plan',
       render: (row) => row.plan?.nombre || 'Sin plan'
     },
+    { key: 'proxima_clase', label: 'Próxima Clase', render: (row) => proximaClase(row.horarios) },
     { key: 'estado_pago', label: 'Estado de Pago', render: (row) => <Badge status={row.estado_pago} /> },
-    { key: 'fecha_vencimiento', label: 'Vencimiento Mensual', render: (row) => formatDate(row.fecha_vencimiento) },
+    {
+      key: 'fecha_vencimiento',
+      label: 'Vencimiento Mensual',
+      render: (row) => (row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : 'Sin registrar'),
+    },
     {
       key: 'actions',
       label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
-          <button onClick={() => navigate(`/alumnos/${row.id}`)} className="text-blue-600 hover:text-blue-800">
+          <button onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}`); }} className="text-blue-600 hover:text-blue-800">
             <Eye className="h-4 w-4" />
           </button>
-          <button onClick={() => navigate(`/alumnos/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
+          <button onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}/editar`); }} className="text-amber-600 hover:text-amber-800">
             <Edit className="h-4 w-4" />
           </button>
-          <button onClick={() => setDeleteId(row.id)} className="text-red-600 hover:text-red-800">
+          <button onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); }} className="text-red-600 hover:text-red-800">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -120,7 +132,7 @@ console.log("ERROR:", error);
         <EmptyState title="No se encontraron alumnos" actionLabel="Crear Alumno" onAction={() => navigate('/alumnos/nuevo')} />
       ) : (
         <>
-          <Table columns={columns} data={alumnos} />
+          <Table columns={columns} data={alumnos} onRowClick={(row) => navigate(`/alumnos/${row.id}`)} />
           <Pagination pagination={pagination} onPageChange={setPage} onLimitChange={setLimit} />
         </>
       )}
