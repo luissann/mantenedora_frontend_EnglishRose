@@ -7,14 +7,9 @@ const client = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
-
-client.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  // La sesión viaja en una cookie httpOnly (ver authStore.js) — el
+  // navegador necesita esto para enviarla en cada request.
+  withCredentials: true,
 });
 
 client.interceptors.response.use(

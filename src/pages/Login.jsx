@@ -84,7 +84,7 @@ export default function Login() {
   const onSubmit = async (values) => {
     try {
       const response = await loginRequest(values.rut, values.password);
-      loginStore(response.data.token, response.data.usuario);
+      loginStore(response.data.usuario);
       toast.success('Sesión iniciada correctamente');
       setLoggedIn(true);  // Activar polling de WhatsApp
     } catch (error) {
