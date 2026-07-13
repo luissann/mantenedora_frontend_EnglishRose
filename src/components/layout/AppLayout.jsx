@@ -17,11 +17,11 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-page text-text-primary">
+      <Topbar onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="min-w-0 flex-1 p-4 sm:p-6">
-          <Topbar onMenuClick={() => setSidebarOpen(true)} />
-          <main className="mt-6">
+          <main>
             <Suspense fallback={<RouteFallback />}>
               <Outlet />
             </Suspense>

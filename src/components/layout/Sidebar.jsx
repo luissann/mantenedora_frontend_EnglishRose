@@ -65,7 +65,7 @@ export function Sidebar({ isOpen = false, onClose }) {
   return (
     <>
       {/* Sidebar fija en desktop */}
-      <aside className="hidden h-screen w-[220px] flex-col border-r border-border bg-white px-4 py-6 lg:flex">
+      <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[220px] flex-col border-r border-border bg-white px-4 py-6 lg:flex">
         <SidebarContent logout={logout} />
       </aside>
 
