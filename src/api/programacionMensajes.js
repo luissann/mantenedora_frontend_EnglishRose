@@ -5,6 +5,11 @@ export async function getProgramacionMensajes(params = {}) {
   return data;
 }
 
+export async function getCalendarioMensual(anio, mes) {
+  const { data } = await client.get('/programacion/calendario', { params: { anio, mes } });
+  return data;
+}
+
 export async function getProgramacionMensaje(id) {
   const { data } = await client.get(`/programacion/${id}`);
   return data;

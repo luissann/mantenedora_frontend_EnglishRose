@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Users, GraduationCap } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
+import { FormErrorSummary } from '../../components/shared/FormErrorSummary';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -77,6 +78,7 @@ export default function AlumnoNuevoPage() {
       <PageHeader title="Crear Alumno" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <FormErrorSummary errors={errors} />
         <Card watermark={false}>
           <div className="space-y-6">
             <div className="flex items-center gap-3 text-text-primary">

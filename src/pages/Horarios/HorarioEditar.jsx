@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { PageHeader } from '../../components/shared/PageHeader';
+import { FormErrorSummary } from '../../components/shared/FormErrorSummary';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -101,6 +102,7 @@ export default function HorarioEditarPage() {
       <PageHeader title="Editar Horario" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <FormErrorSummary errors={errors} />
         <Card watermark>
           <div className="space-y-4">
             <Select

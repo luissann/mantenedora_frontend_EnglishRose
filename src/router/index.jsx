@@ -36,6 +36,7 @@ const HorarioSemanalPage = lazy(() => import('../pages/Horarios/HorarioSemanal')
 // Profesores
 const ProfesoresIndexPage = lazy(() => import('../pages/Profesores'));
 const ProfesorNuevoPage = lazy(() => import('../pages/Profesores/ProfesorNuevo'));
+const ProfesorPerfilPage = lazy(() => import('../pages/Profesores/ProfesorPerfil'));
 const ProfesorEditarPage = lazy(() => import('../pages/Profesores/ProfesorEditar'));
 
 // Boletas
@@ -99,6 +100,7 @@ const router = createBrowserRouter([
       // Profesores
       { path: 'profesores', element: <ProfesoresIndexPage /> },
       { path: 'profesores/nuevo', element: <ProfesorNuevoPage /> },
+      { path: 'profesores/:id', element: <ProfesorPerfilPage /> },
       { path: 'profesores/:id/editar', element: <ProfesorEditarPage /> },
 
       // Boletas — módulo desarrollado pero fuera de la 1ra etapa (ver Sidebar.jsx)

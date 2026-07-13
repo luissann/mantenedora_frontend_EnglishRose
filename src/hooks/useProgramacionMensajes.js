@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getProgramacionMensajes, getProgramacionMensaje, crearProgramacionMensaje, actualizarProgramacionMensaje, eliminarProgramacionMensaje, getNotificaciones, enviarWhatsappAhora } from '../api/programacionMensajes';
+import { getProgramacionMensajes, getProgramacionMensaje, crearProgramacionMensaje, actualizarProgramacionMensaje, eliminarProgramacionMensaje, getNotificaciones, enviarWhatsappAhora, getCalendarioMensual } from '../api/programacionMensajes';
+
+export function useCalendarioMensual(anio, mes) {
+  return useQuery({
+    queryKey: ['programacion-calendario', anio, mes],
+    queryFn: () => getCalendarioMensual(anio, mes),
+  });
+}
 
 export function useNotificaciones(filters = {}, options = {}) {
   return useQuery({

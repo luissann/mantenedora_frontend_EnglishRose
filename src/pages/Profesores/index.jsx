@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -35,10 +35,13 @@ export default function ProfesoresIndexPage() {
       label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
-          <button onClick={() => navigate(`/profesores/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
+          <button onClick={(e) => { e.stopPropagation(); navigate(`/profesores/${row.id}`); }} className="text-blue-600 hover:text-blue-800">
+            <Eye className="h-4 w-4" />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); navigate(`/profesores/${row.id}/editar`); }} className="text-amber-600 hover:text-amber-800">
             <Edit className="h-4 w-4" />
           </button>
-          <button onClick={() => setDeleteId(row.id)} className="text-red-600 hover:text-red-800">
+          <button onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); }} className="text-red-600 hover:text-red-800">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -67,7 +70,7 @@ export default function ProfesoresIndexPage() {
         <EmptyState title="No se encontraron profesores" actionLabel="Crear Profesor" onAction={() => navigate('/profesores/nuevo')} />
       ) : (
         <>
-          <Table columns={columns} data={profesores} />
+          <Table columns={columns} data={profesores} onRowClick={(row) => navigate(`/profesores/${row.id}`)} />
           <Pagination pagination={pagination} onPageChange={setPage} onLimitChange={setLimit} />
         </>
       )}
