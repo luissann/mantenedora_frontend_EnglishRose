@@ -17,7 +17,10 @@ const schema = z.object({
   segundo_apellido: z.string().optional(),
   email: z.string().email('Correo válido requerido'),
   rut: z.string().min(1, 'El RUT es requerido'),
-  password_hash: z.string().optional(),
+  password: z.string().optional().refine(
+    (value) => !value || (value.length >= 8 && /[A-Z]/.test(value) && /[0-9]/.test(value)),
+    'Debe tener 8+ caracteres, una mayúscula y un número'
+  ),
   activo: z.boolean(),
 });
 
@@ -43,7 +46,7 @@ export default function ConfiguracionPage() {
       segundo_apellido: '',
       email: '',
       rut: '',
-      password_hash: '',
+      password: '',
       activo: true,
     },
   });
@@ -59,7 +62,7 @@ export default function ConfiguracionPage() {
       segundo_apellido: usuario.segundo_apellido || '',
       email: usuario.email || '',
       rut: usuario.rut || '',
-      password_hash: '',
+      password: '',
       activo: Boolean(usuario.activo),
     });
   }, [usuarioAuth, usuarioData, reset]);
@@ -77,8 +80,8 @@ export default function ConfiguracionPage() {
       activo: values.activo ? 1 : 0,
     };
 
-    if (values.password_hash && values.password_hash.trim()) {
-      payload.password_hash = values.password_hash;
+    if (values.password && values.password.trim()) {
+      payload.password = values.password;
     }
 
     try {
@@ -114,7 +117,7 @@ export default function ConfiguracionPage() {
             </div>
             <Input label="Correo Electrónico" type="email" {...register('email')} error={errors.email?.message} />
             <Input label="RUT" {...register('rut')} error={errors.rut?.message} />
-            <Input label="Nueva contraseña (opcional)" type="password" {...register('password_hash')} error={errors.password_hash?.message} />
+            <Input label="Nueva contraseña (opcional)" type="password" {...register('password')} error={errors.password?.message} />
             <div>
               <p className="mb-2 text-sm text-text-secondary">Estado</p>
               <label className="flex items-center gap-2">

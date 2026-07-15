@@ -2,41 +2,66 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Users, GraduationCap } from 'lucide-react';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '../../components/shared/PageHeader';
-import { FormErrorSummary } from '../../components/shared/FormErrorSummary';
-import { Card } from '../../components/ui/Card';
-import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
-import { DatePicker } from '../../components/ui/DatePicker';
-import { Toggle } from '../../components/ui/Toggle';
-import { Button } from '../../components/ui/Button';
-import { useCrearAlumno } from '../../hooks/useAlumnos';
-import { usePlanes } from '../../hooks/usePlanes';
+import { crearAlumno } from '../../api/alumnos';
+import { crearProgramasYHorarios } from '../../utils/alumnoProgramaSync';
+import { AlumnoForm } from './AlumnoForm';
+
+const horarioSchema = z.object({
+  id: z.union([z.number(), z.string()]).optional(),
+  dia_semana: z.string().min(1, 'Día requerido'),
+  hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
+  hora_fin: z.string().optional(),
+  detalle: z.string().optional(),
+});
+
+const programaSchema = z
+  .object({
+    id: z.union([z.number(), z.string()]).optional(),
+    id_programa: z.string().min(1, 'Programa requerido'),
+    id_profesor: z.string().optional(),
+    frecuencia: z.coerce.number().min(1, 'Mínimo 1 clase por semana').max(7, 'Máximo 7 clases por semana'),
+    valor_clase_clp: z.coerce.number().min(0, 'Valor por clase requerido'),
+    horarios: z.array(horarioSchema).default([]),
+  })
+  .superRefine((data, ctx) => {
+    if ((data.horarios || []).length > Number(data.frecuencia || 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['horarios'],
+        message: `Cargaste ${data.horarios.length} horario(s) pero la frecuencia definida es ${data.frecuencia}.`,
+      });
+    }
+  });
 
 const schema = z.object({
   nombre: z.string().min(1, 'El primer nombre es requerido'),
   segundo_nombre: z.string().optional(),
   apellido: z.string().min(1, 'El apellido es requerido'),
   segundo_apellido: z.string().optional(),
+  alias: z.string().optional(),
   telefono: z.string().min(1, 'Teléfono requerido'),
-  email: z.string().email('Correo válido requerido'),
-  id_plan: z.string().min(1, 'Plan requerido'),
+  email: z.string().email('Correo inválido').optional().or(z.literal('')),
   activo: z.boolean(),
   fecha_ingreso: z.date().or(z.string()),
   observaciones: z.string().optional(),
+  dia_envio_mensaje: z.string().optional(),
+  hora_envio_mensaje: z.string().optional(),
+  programas: z.array(programaSchema).max(3, 'Máximo 3 programas por alumno'),
 });
 
 export default function AlumnoNuevoPage() {
   const navigate = useNavigate();
-  const { data: planesData } = usePlanes();
-  const createMutation = useCrearAlumno();
+  const queryClient = useQueryClient();
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
@@ -45,103 +70,71 @@ export default function AlumnoNuevoPage() {
       segundo_nombre: '',
       apellido: '',
       segundo_apellido: '',
+      alias: '',
       telefono: '',
       email: '',
-      id_plan: '',
       activo: true,
       fecha_ingreso: new Date(),
       observaciones: '',
+      dia_envio_mensaje: 'LUNES',
+      hora_envio_mensaje: '09:00',
+      programas: [],
     },
   });
 
-  const planes = (planesData?.data || []).map((p) => ({ value: String(p.id), label: p.nombre }));
-
-  const onSubmit = async (values) => {
+  const onSubmit = handleSubmit(async (values) => {
+    let idAlumno;
     try {
       let fechaFormateada = values.fecha_ingreso;
       if (values.fecha_ingreso instanceof Date) {
         fechaFormateada = values.fecha_ingreso.toISOString().split('T')[0];
       }
 
-      await createMutation.mutateAsync({
-        ...values,
-        id_plan: Number(values.id_plan),
+      const res = await crearAlumno({
+        nombre: values.nombre,
+        segundo_nombre: values.segundo_nombre || null,
+        apellido: values.apellido,
+        segundo_apellido: values.segundo_apellido || null,
+        alias: values.alias || null,
+        telefono: values.telefono,
+        email: values.email || null,
         activo: !!values.activo,
         fecha_ingreso: fechaFormateada,
+        observaciones: values.observaciones || null,
+        dia_envio_mensaje: values.dia_envio_mensaje || null,
+        hora_envio_mensaje: values.hora_envio_mensaje || '09:00',
       });
-      navigate('/alumnos');
-    } catch {}
-  };
+      idAlumno = res?.data?.id;
+
+      await crearProgramasYHorarios(idAlumno, values.programas || []);
+
+      queryClient.invalidateQueries({ queryKey: ['alumnos'] });
+      toast.success('Alumno creado exitosamente');
+      navigate(`/alumnos/${idAlumno}`);
+    } catch (error) {
+      if (idAlumno) {
+        toast.error('El alumno se creó pero hubo un error guardando sus programas u horarios. Revisa y completa desde "Editar Alumno".');
+        navigate(`/alumnos/${idAlumno}/editar`);
+      } else {
+        toast.error(error.response?.data?.message || 'Error al crear alumno');
+      }
+    }
+  });
 
   return (
     <div className="space-y-6">
       <PageHeader title="Crear Alumno" />
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <FormErrorSummary errors={errors} />
-        <Card watermark={false}>
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 text-text-primary">
-              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-rose-light text-rose">
-                <Users className="h-4 w-4" />
-              </span>
-              <h3 className="text-lg font-semibold">Información Personal</h3>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Primer Nombre" placeholder="Ej: María" {...register('nombre')} error={errors.nombre?.message} />
-              <Input label="Segundo Nombre" placeholder="Opcional" {...register('segundo_nombre')} />
-              <Input label="Primer Apellido" placeholder="Ej: González" {...register('apellido')} error={errors.apellido?.message} />
-              <Input label="Segundo Apellido" placeholder="Opcional" {...register('segundo_apellido')} />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Teléfono" placeholder="+56 9 1234 5678" {...register('telefono')} error={errors.telefono?.message} />
-              <Input label="Correo Electrónico" type="email" placeholder="correo@ejemplo.com" {...register('email')} error={errors.email?.message} />
-            </div>
-          </div>
-        </Card>
-
-        <Card watermark={false}>
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 text-text-primary">
-              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-rose-light text-rose">
-                <GraduationCap className="h-4 w-4" />
-              </span>
-              <h3 className="text-lg font-semibold">Información Académica</h3>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Select
-                label="Plan"
-                placeholder="Seleccionar plan..."
-                options={planes}
-                value={watch('id_plan')}
-                onChange={(value) => setValue('id_plan', value)}
-                searchable
-                error={errors.id_plan?.message}
-              />
-              <Toggle label="Estado de Actividad" value={watch('activo')} onChange={(value) => setValue('activo', value)} />
-            </div>
-            <DatePicker label="Fecha de Ingreso" value={watch('fecha_ingreso')} onChange={(date) => setValue('fecha_ingreso', date)} />
-            <div>
-              <label className="text-sm text-text-secondary">Notas</label>
-              <textarea
-                {...register('observaciones')}
-                className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none transition focus:border-rose focus:ring-2 focus:ring-rose/20"
-                rows={4}
-                placeholder="Agrega notas sobre el alumno..."
-              />
-            </div>
-          </div>
-        </Card>
-
-        <div className="flex gap-3 justify-end">
-          <Button type="button" variant="secondary" onClick={() => navigate('/alumnos')}>
-            Cancelar
-          </Button>
-          <Button type="submit" variant="primary" loading={isSubmitting || createMutation.isPending}>
-            Guardar Alumno
-          </Button>
-        </div>
-      </form>
+      <AlumnoForm
+        control={control}
+        register={register}
+        watch={watch}
+        setValue={setValue}
+        errors={errors}
+        onSubmit={onSubmit}
+        onCancel={() => navigate('/alumnos')}
+        submitting={isSubmitting}
+        submitLabel="Guardar Alumno"
+      />
     </div>
   );
 }

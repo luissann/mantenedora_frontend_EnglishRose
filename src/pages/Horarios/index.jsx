@@ -101,6 +101,11 @@ export default function HorariosIndexPage() {
       render: (row) => formatTime(row.hora_fin),
     },
     {
+      key: 'detalle',
+      label: 'Detalle',
+      render: (row) => row.detalle || '—',
+    },
+    {
       key: 'actions',
       label: 'Acciones',
       render: (row) => (

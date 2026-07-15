@@ -44,7 +44,7 @@ export default function Dashboard() {
 
         <StatCard className="xl:col-start-1 xl:row-start-1" icon={Users} label="Total Alumnos" value={dashboard.totalAlumnos || '0'} color="rose" />
         <StatCard className="xl:col-start-1 xl:row-start-2" icon={UserCheck} label="Alumnos Activos" value={dashboard.alumnosActivos || '0'} color="green" />
-        <StatCard className="xl:col-start-1 xl:row-start-3" icon={Layers} label="Total Planes" value={dashboard.totalPlanes || '0'} color="rose" />
+        <StatCard className="xl:col-start-1 xl:row-start-3" icon={Layers} label="Total Programas" value={dashboard.totalProgramas || '0'} color="rose" />
 
         <Card watermark className="xl:col-start-1 xl:row-start-4">
           <div className="mb-4 flex items-center gap-2">

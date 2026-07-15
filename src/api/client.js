@@ -2,8 +2,17 @@ import axios from 'axios';
 import useAuthStore from '../store/authStore';
 import useSystemStatusStore from '../store/systemStatusStore';
 
+// En dev, Front y Backend corren en puertos distintos (localhost:5173 /
+// :3000) — ahí VITE_API_URL es obligatorio. En producción, nginx sirve el
+// Front y el Backend bajo el mismo origen (dominio O IP directa), así que
+// en vez de "hornear" una URL fija en el build, se detecta sola en tiempo
+// de carga — así el mismo build funciona sin importar por cuál puerta
+// (dominio, IP, otro dominio futuro) entre cada usuario.
+export const apiBaseURL = import.meta.env.VITE_API_URL
+  || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:3000/api');
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: apiBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },

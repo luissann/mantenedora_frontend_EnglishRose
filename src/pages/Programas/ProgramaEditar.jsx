@@ -8,10 +8,10 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
-import { useActualizarPlan, usePlan } from '../../hooks/usePlanes';
+import { useActualizarPrograma, usePrograma } from '../../hooks/useProgramas';
 
 const schema = z.object({
-  nombre: z.string().min(1, 'Nombre del plan requerido'),
+  nombre: z.string().min(1, 'Nombre del programa requerido'),
   descripcion: z.string().optional(),
   precio_clp: z.coerce.number().min(0, 'Precio CLP requerido'),
   precio_usd: z.coerce.number().min(0, 'Precio USD requerido'),
@@ -19,11 +19,11 @@ const schema = z.object({
   activo: z.coerce.boolean(),
 });
 
-export default function PlanEditarPage() {
+export default function ProgramaEditarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: planData, isLoading } = usePlan(id);
-  const updateMutation = useActualizarPlan();
+  const { data: programaData, isLoading } = usePrograma(id);
+  const updateMutation = useActualizarPrograma();
 
   const {
     register,
@@ -45,17 +45,17 @@ export default function PlanEditarPage() {
   });
 
   useEffect(() => {
-    if (!planData?.data) return;
-    const plan = planData.data;
+    if (!programaData?.data) return;
+    const programa = programaData.data;
     reset({
-      nombre: plan.nombre || '',
-      descripcion: plan.descripcion || '',
-      precio_clp: Number(plan.precio_clp || 0),
-      precio_usd: Number(plan.precio_usd || 0),
-      clases_semana: Number(plan.clases_semana || 0),
-      activo: Boolean(plan.activo),
+      nombre: programa.nombre || '',
+      descripcion: programa.descripcion || '',
+      precio_clp: Number(programa.precio_clp || 0),
+      precio_usd: Number(programa.precio_usd || 0),
+      clases_semana: Number(programa.clases_semana || 0),
+      activo: Boolean(programa.activo),
     });
-  }, [planData, reset]);
+  }, [programaData, reset]);
 
   if (isLoading) {
     return (
@@ -74,18 +74,18 @@ export default function PlanEditarPage() {
         ...values,
         activo: values.activo ? 1 : 0,
       });
-      navigate('/planes');
+      navigate('/programas');
     } catch {}
   };
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Editar Plan" />
+      <PageHeader title="Editar Programa" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card watermark>
           <div className="space-y-4">
-            <Input label="Nombre del Plan" {...register('nombre')} error={errors.nombre?.message} />
+            <Input label="Nombre del Programa" {...register('nombre')} error={errors.nombre?.message} />
             <div>
               <label className="text-sm text-text-secondary">Descripción</label>
               <textarea
@@ -101,14 +101,14 @@ export default function PlanEditarPage() {
               <p className="mb-2 text-sm text-text-secondary">Estado</p>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={activo} onChange={(e) => setValue('activo', e.target.checked)} />
-                <span>Plan activo</span>
+                <span>Programa activo</span>
               </label>
             </div>
           </div>
         </Card>
 
         <div className="flex gap-3 justify-end">
-          <Button type="button" variant="secondary" onClick={() => navigate('/planes')}>
+          <Button type="button" variant="secondary" onClick={() => navigate('/programas')}>
             Cancelar
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting || updateMutation.isPending}>

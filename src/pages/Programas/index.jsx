@@ -6,32 +6,31 @@ import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { Table } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
-import { Card } from '../../components/ui/Card';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
-import { usePlanes, useEliminarPlan } from '../../hooks/usePlanes';
+import { useProgramas, useEliminarPrograma } from '../../hooks/useProgramas';
 import { formatCLP, formatUSD } from '../../utils/formatters';
 
-export default function PlanesIndexPage() {
+export default function ProgramasIndexPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [deleteId, setDeleteId] = useState(null);
 
-  const { data: planesData, isLoading } = usePlanes({
+  const { data: programasData, isLoading } = useProgramas({
     nombre: search,
     page,
     limit,
   });
-  const deleteMutation = useEliminarPlan();
+  const deleteMutation = useEliminarPrograma();
 
-  const planes = planesData?.data || [];
-  const pagination = planesData?.pagination || {};
+  const programas = programasData?.data || [];
+  const pagination = programasData?.pagination || {};
 
   const columns = [
-    { key: 'nombre', label: 'Nombre del Plan' },
+    { key: 'nombre', label: 'Nombre del Programa' },
     { key: 'descripcion', label: 'Descripción' },
     { key: 'precio_clp', label: 'Precio CLP', render: (row) => formatCLP(row.precio_clp) },
     { key: 'precio_usd', label: 'Precio USD', render: (row) => formatUSD(row.precio_usd) },
@@ -42,7 +41,7 @@ export default function PlanesIndexPage() {
       label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
-          <button onClick={() => navigate(`/planes/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
+          <button onClick={() => navigate(`/programas/${row.id}/editar`)} className="text-amber-600 hover:text-amber-800">
             <Edit className="h-4 w-4" />
           </button>
           <button onClick={() => setDeleteId(row.id)} className="text-red-600 hover:text-red-800">
@@ -55,34 +54,34 @@ export default function PlanesIndexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Planes" />
+      <PageHeader title="Programas" />
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/planes/nuevo')}>
-          Nuevo Plan
+        <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/programas/nuevo')}>
+          Nuevo Programa
         </Button>
       </div>
 
       <div className="grid gap-4">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar planes..." />
+        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar programas..." />
       </div>
 
       {isLoading ? (
         <div className="flex h-80 items-center justify-center">
           <Spinner size="lg" />
         </div>
-      ) : planes.length === 0 ? (
-        <EmptyState title="No se encontraron planes" actionLabel="Crear Plan" onAction={() => navigate('/planes/nuevo')} />
+      ) : programas.length === 0 ? (
+        <EmptyState title="No se encontraron programas" actionLabel="Crear Programa" onAction={() => navigate('/programas/nuevo')} />
       ) : (
         <>
-          <Table columns={columns} data={planes} />
+          <Table columns={columns} data={programas} />
           <Pagination pagination={pagination} onPageChange={setPage} onLimitChange={setLimit} />
         </>
       )}
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Eliminar Plan"
-        message="¿Estás seguro de que deseas eliminar este plan?"
+        title="Eliminar Programa"
+        message="¿Estás seguro de que deseas eliminar este programa?"
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

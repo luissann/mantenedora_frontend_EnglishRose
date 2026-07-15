@@ -10,6 +10,24 @@ export const DIAS_DISPLAY = {
   DOMINGO: 'Domingo',
 };
 
+// getDay(): 0=Domingo, 1=Lunes, ... 6=Sábado
+const DIA_POR_GETDAY = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+
+export function diaSemanaDesdeFecha(fecha) {
+  return DIA_POR_GETDAY[fecha.getDay()];
+}
+
+/** Próxima fecha (hoy o futura) que cae en el día de la semana dado, para mostrar en el calendario. */
+export function proximaFechaParaDia(diaSemana) {
+  const hoy = new Date();
+  const objetivo = DIA_POR_GETDAY.indexOf(diaSemana);
+  if (objetivo === -1) return hoy;
+  const diff = (objetivo - hoy.getDay() + 7) % 7;
+  const fecha = new Date(hoy);
+  fecha.setDate(hoy.getDate() + diff);
+  return fecha;
+}
+
 export const ESTADOS_PAGO = ['PAGADO', 'PENDIENTE', 'VENCIDO'];
 
 // Por ahora sólo existe el rol Admin — se ampliará cuando se definan

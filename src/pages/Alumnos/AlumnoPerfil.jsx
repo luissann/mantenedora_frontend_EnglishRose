@@ -1,29 +1,88 @@
 import { useMemo, useState } from 'react';
+import { parseISO } from 'date-fns';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { Toggle } from '../../components/ui/Toggle';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Spinner } from '../../components/ui/Spinner';
 import { useAlumnoCompleto } from '../../hooks/useAlumnos';
-import { useEnviarWhatsappAhora } from '../../hooks/useProgramacionMensajes';
-import { formatDate, formatCLP } from '../../utils/formatters';
+import { useActualizarProgramacionMensaje } from '../../hooks/useProgramacionMensajes';
+import { formatDate, formatTime, formatCLP } from '../../utils/formatters';
+import { DIAS_DISPLAY } from '../../utils/constants';
+
+function EditarProgramacionModal({ programacion, onClose }) {
+  const actualizarMutation = useActualizarProgramacionMensaje();
+  const [fechaEnvio, setFechaEnvio] = useState(programacion ? parseISO(programacion.fecha_envio) : new Date());
+  const [horaEnvio, setHoraEnvio] = useState(programacion?.hora_envio?.slice(0, 5) || '09:00');
+  const [mensajePersonalizado, setMensajePersonalizado] = useState(programacion?.mensaje_personalizado || '');
+  const [activo, setActivo] = useState(!!programacion?.activo);
+
+  if (!programacion) return null;
+
+  const handleGuardar = async () => {
+    try {
+      await actualizarMutation.mutateAsync({
+        id: programacion.id,
+        fecha_envio: fechaEnvio instanceof Date ? fechaEnvio.toISOString().split('T')[0] : fechaEnvio,
+        hora_envio: horaEnvio,
+        mensaje_personalizado: mensajePersonalizado.trim() || null,
+        activo,
+      });
+      onClose();
+    } catch {}
+  };
+
+  return (
+    <Modal isOpen={!!programacion} onClose={onClose} title="Editar Programación de WhatsApp" size="md">
+      <div className="space-y-4">
+        <DatePicker label="Fecha de Envío" value={fechaEnvio} onChange={setFechaEnvio} />
+        <div>
+          <label className="text-sm text-text-secondary">Hora de Envío</label>
+          <input
+            type="time"
+            value={horaEnvio}
+            onChange={(e) => setHoraEnvio(e.target.value)}
+            className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
+          />
+        </div>
+        <div>
+          <label className="text-sm text-text-secondary">Mensaje personalizado</label>
+          <textarea
+            value={mensajePersonalizado}
+            onChange={(e) => setMensajePersonalizado(e.target.value)}
+            rows={4}
+            placeholder="Déjalo vacío para usar el mensaje automático agrupado por programa."
+            className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
+          />
+        </div>
+        <Toggle label="Estado del Envío" trueLabel="Enviar" falseLabel="Pausado" value={activo} onChange={setActivo} />
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" loading={actualizarMutation.isPending} onClick={handleGuardar}>Guardar Cambios</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
 
 export default function AlumnoPerfilPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading } = useAlumnoCompleto(id);
   const [paginaProgramaciones, setPaginaProgramaciones] = useState(1);
-  const [mostrarExito, setMostrarExito] = useState(false);
-  const enviarWhatsappAhora = useEnviarWhatsappAhora();
+  const [editandoProgramacion, setEditandoProgramacion] = useState(null);
+  const actualizarMutation = useActualizarProgramacionMensaje();
 
   const alumno = data?.data || {};
 
   const programaciones = useMemo(() => {
     return [...(alumno.programaciones || [])].sort((a, b) => {
-      const fechaA = a.fecha_envio ? new Date(a.fecha_envio).getTime() : 0;
-      const fechaB = b.fecha_envio ? new Date(b.fecha_envio).getTime() : 0;
+      const fechaA = a.fecha_envio ? parseISO(a.fecha_envio).getTime() : 0;
+      const fechaB = b.fecha_envio ? parseISO(b.fecha_envio).getTime() : 0;
       return fechaB - fechaA;
     });
   }, [alumno.programaciones]);
@@ -52,6 +111,7 @@ export default function AlumnoPerfilPage() {
   const totalPaginas = Math.max(1, Math.ceil(programaciones.length / porPagina));
   const paginaActual = Math.min(paginaProgramaciones, totalPaginas);
   const programacionesPagina = programaciones.slice((paginaActual - 1) * porPagina, paginaActual * porPagina);
+  const programas = alumno.programas || [];
 
   return (
     <div className="space-y-6">
@@ -71,6 +131,9 @@ export default function AlumnoPerfilPage() {
               <p className="text-lg font-semibold text-text-primary">
                 {nombreCompleto}
               </p>
+              {alumno.alias && (
+                <p className="text-sm text-text-secondary">Alias: {alumno.alias}</p>
+              )}
             </div>
 
             <div>
@@ -95,10 +158,10 @@ export default function AlumnoPerfilPage() {
           <div className="space-y-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-rose">
-                Plan
+                Programas
               </p>
               <p className="text-lg font-semibold text-text-primary">
-                {alumno.plan?.nombre || 'Sin plan'}
+                {programas.length ? `${programas.length} activo(s)` : 'Sin programas'}
               </p>
             </div>
 
@@ -124,19 +187,37 @@ export default function AlumnoPerfilPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card watermark>
           <h3 className="mb-4 font-semibold text-text-primary">
-            Horario de Clases
+            Programas
           </h3>
 
-          <div className="space-y-2 text-sm">
-            {alumno.horarios?.length ? (
-              alumno.horarios.map((h) => (
-                <p key={h.id} className="text-text-secondary">
-                  {h.dia_semana} {h.hora_inicio}
-                </p>
+          <div className="space-y-4 text-sm">
+            {programas.length ? (
+              programas.map((ap) => (
+                <div key={ap.id} className="rounded-2xl border border-border-input p-3">
+                  <p className="font-semibold text-text-primary">{ap.programa?.nombre || 'Programa'}</p>
+                  <p className="text-text-secondary">
+                    Docente: {ap.profesor ? `${ap.profesor.nombre} ${ap.profesor.apellido}` : 'Sin asignar'}
+                  </p>
+                  <p className="text-text-secondary">
+                    Frecuencia: {ap.frecuencia} clase(s)/semana · {formatCLP(ap.valor_clase_clp)} x clase
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    {(ap.horarios || []).length ? (
+                      ap.horarios.map((h) => (
+                        <p key={h.id} className="text-xs text-text-secondary">
+                          {DIAS_DISPLAY[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
+                          {h.detalle ? ` · ${h.detalle}` : ''}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-xs text-text-secondary">Sin horarios cargados.</p>
+                    )}
+                  </div>
+                </div>
               ))
             ) : (
               <p className="text-text-secondary">
-                No hay horarios registrados.
+                Este alumno no tiene programas asignados.
               </p>
             )}
           </div>
@@ -182,7 +263,7 @@ export default function AlumnoPerfilPage() {
             {programaciones.length ? (
               <>
                 {programacionesPagina.map((programacion) => {
-                const fechaProgramada = programacion.fecha_envio ? new Date(programacion.fecha_envio) : null;
+                const fechaProgramada = programacion.fecha_envio ? parseISO(programacion.fecha_envio) : null;
                 const yaPasada = fechaProgramada ? fechaProgramada < inicioHoy : false;
 
                 return (
@@ -200,10 +281,27 @@ export default function AlumnoPerfilPage() {
                       </span>
                     </div>
                     <p className="mt-2 text-text-secondary">
-                      Hora: {programacion.hora_envio || '-'}
+                      Hora: {programacion.hora_envio ? formatTime(programacion.hora_envio) : '-'}
                     </p>
-                    <div className="mt-2">
-                      <Badge status={programacion.activo ? 'Programado' : 'Inactivo'} />
+                    {programacion.mensaje_personalizado && (
+                      <p className="mt-1 line-clamp-2 text-xs text-text-secondary">
+                        Mensaje personalizado: {programacion.mensaje_personalizado}
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <Toggle
+                        trueLabel="Enviar"
+                        falseLabel="Pausado"
+                        value={!!programacion.activo}
+                        onChange={(value) => actualizarMutation.mutate({ id: programacion.id, activo: value })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEditandoProgramacion(programacion)}
+                        className="text-xs font-semibold text-rose hover:underline"
+                      >
+                        Editar
+                      </button>
                     </div>
                   </div>
                 );
@@ -256,35 +354,13 @@ export default function AlumnoPerfilPage() {
         >
           Registrar Pago
         </Button>
-
-        <Button
-          variant="secondary"
-          loading={enviarWhatsappAhora.isPending}
-          onClick={() =>
-            enviarWhatsappAhora.mutate(id, {
-              onSuccess: () => setMostrarExito(true),
-            })
-          }
-        >
-          Enviar WhatsApp Ahora
-        </Button>
       </div>
 
-      <Modal
-        isOpen={mostrarExito}
-        onClose={() => setMostrarExito(false)}
-        title="Mensaje enviado"
-        size="sm"
-      >
-        <p className="text-sm text-text-secondary">
-          Mensaje enviado con éxito a {nombreCompleto || 'el alumno'}.
-        </p>
-        <div className="mt-6 flex justify-end">
-          <Button variant="primary" onClick={() => setMostrarExito(false)}>
-            Aceptar
-          </Button>
-        </div>
-      </Modal>
+      <EditarProgramacionModal
+        key={editandoProgramacion?.id || 'sin-seleccion'}
+        programacion={editandoProgramacion}
+        onClose={() => setEditandoProgramacion(null)}
+      />
     </div>
   );
 }

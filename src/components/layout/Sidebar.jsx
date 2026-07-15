@@ -1,17 +1,20 @@
-import { LayoutDashboard, GraduationCap, Clock, MessageCircle, Users, Settings, LogOut, X, UserCog } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 
 // Primera etapa: solo lo pedido (envío de WhatsApp automático + lo mínimo
-// para sostenerlo). Pagos, Planes, Boletas y Pagos a Profesores quedan
-// desarrollados pero ocultos y bloqueados (ver router/index.jsx) para
-// habilitarlos en una etapa siguiente.
+// para sostenerlo). Pagos, Boletas y Pagos a Profesores quedan desarrollados
+// pero ocultos y bloqueados (ver router/index.jsx) para habilitarlos en una
+// etapa siguiente. Programas se habilitó porque el nuevo flujo de Alumnos
+// depende de poder crear/editar Programas para asignarlos. El módulo
+// standalone de WhatsApp se eliminó: la programación de mensajes ahora se
+// administra directamente desde el perfil de cada Alumno.
 const navItems = [
   { to: '/dashboard', label: 'Panel Principal', icon: LayoutDashboard },
   { to: '/alumnos', label: 'Alumnos', icon: GraduationCap },
+  { to: '/programas', label: 'Programas', icon: Layers },
   { to: '/profesores', label: 'Profesores', icon: UserCog },
   { to: '/horarios', label: 'Horarios', icon: Clock },
-  { to: '/whatsapp', label: 'Programación WhatsApp', icon: MessageCircle },
   { to: '/usuarios', label: 'Usuarios', icon: Users },
   { to: '/configuracion', label: 'Configuración', icon: Settings },
 ];
@@ -77,7 +80,7 @@ export function Sidebar({ isOpen = false, onClose }) {
           aria-hidden="true"
         />
         <aside
-          className={`absolute left-0 top-0 flex h-screen w-[260px] flex-col bg-white px-4 py-6 shadow-2xl transition-transform duration-200 ${
+          className={`absolute left-0 top-0 flex h-screen w-[260px] flex-col overflow-y-auto bg-white px-4 py-6 shadow-2xl transition-transform duration-200 ${
             isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >

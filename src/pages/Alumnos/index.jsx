@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
@@ -7,23 +7,108 @@ import { SearchBar } from '../../components/ui/SearchBar';
 import { Select } from '../../components/ui/Select';
 import { Table } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
-import { Badge } from '../../components/ui/Badge';
+import { Toggle } from '../../components/ui/Toggle';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useAlumnos, useEliminarAlumno } from '../../hooks/useAlumnos';
-import { usePlanes } from '../../hooks/usePlanes';
+import { useProgramas } from '../../hooks/useProgramas';
+import {
+  useProgramacionMensajes,
+  useActualizarProgramacionMensaje,
+  useCrearProgramacionMensaje,
+} from '../../hooks/useProgramacionMensajes';
 import { formatDate, formatTime } from '../../utils/formatters';
 
-const ORDEN_DIAS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
 
-function proximaClase(horarios = []) {
-  if (!horarios.length) return 'Sin horario';
-  const [primero] = [...horarios].sort(
-    (a, b) => ORDEN_DIAS.indexOf(a.dia_semana) - ORDEN_DIAS.indexOf(b.dia_semana)
+function ReprogramarForm({ idAlumno, onDone, onCancel }) {
+  const crearMutation = useCrearProgramacionMensaje();
+  const [fecha, setFecha] = useState('');
+  const [hora, setHora] = useState('09:00');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!fecha) return;
+    crearMutation.mutate(
+      { id_alumno: idAlumno, fecha_envio: fecha, hora_envio: hora, activo: true },
+      { onSuccess: onDone }
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-1">
+      <div className="flex gap-1">
+        <input
+          type="date"
+          value={fecha}
+          onChange={(e) => setFecha(e.target.value)}
+          className="w-32 rounded-lg border border-border-input bg-white px-1.5 py-1 text-xs outline-none focus:border-rose"
+        />
+        <input
+          type="time"
+          value={hora}
+          onChange={(e) => setHora(e.target.value)}
+          className="w-20 rounded-lg border border-border-input bg-white px-1.5 py-1 text-xs outline-none focus:border-rose"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={!fecha || crearMutation.isPending}
+          className="rounded-lg bg-rose px-2 py-1 text-xs font-medium text-white disabled:opacity-50"
+        >
+          Programar envío
+        </button>
+        <button type="button" onClick={onCancel} className="text-xs text-text-secondary hover:underline">
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
-  const dia = primero.dia_semana.charAt(0) + primero.dia_semana.slice(1).toLowerCase();
-  return `${dia} ${formatTime(primero.hora_inicio)}`;
+}
+
+function EnvioSwitchCell({ idAlumno, programacion }) {
+  const actualizarMutation = useActualizarProgramacionMensaje();
+  const [configurando, setConfigurando] = useState(false);
+
+  if (!programacion) {
+    if (configurando) {
+      return (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ReprogramarForm
+            idAlumno={idAlumno}
+            onDone={() => setConfigurando(false)}
+            onCancel={() => setConfigurando(false)}
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
+        <Toggle
+          value={false}
+          trueLabel="Enviar"
+          falseLabel="Pausado"
+          onChange={(value) => value && setConfigurando(true)}
+        />
+        <p className="text-[11px] text-text-secondary">Sin envío programado</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
+      <Toggle
+        value={!!programacion.activo}
+        trueLabel="Enviar"
+        falseLabel="Pausado"
+        onChange={(value) => actualizarMutation.mutate({ id: programacion.id, activo: value })}
+      />
+      <p className="text-[11px] text-text-secondary">
+        Próximo: {formatDate(programacion.fecha_envio)} {formatTime(programacion.hora_envio)}
+      </p>
+    </div>
+  );
 }
 
 export default function AlumnosPage() {
@@ -31,25 +116,45 @@ export default function AlumnosPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [planFilter, setPlanFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [programaFilter, setProgramaFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('true');
   const [deleteId, setDeleteId] = useState(null);
 
   const { data: alumnosData, isLoading } = useAlumnos({
     nombre: search,
-    id_plan: planFilter,
+    id_programa: programaFilter,
     activo: statusFilter,
     page,
     limit,
   });
 
-  const { data: planesData } = usePlanes();
+  const { data: programasData } = useProgramas({ activo: 'true', limit: 100 });
   const deleteMutation = useEliminarAlumno();
+
+  // El endpoint GET /alumnos no incluye la próxima programación de WhatsApp
+  // pendiente, así que se resuelve en el frontend con una consulta aparte a
+  // /programacion filtrando por estado PENDIENTE y agrupando por alumno.
+  const { data: programacionesData } = useProgramacionMensajes({ estado_envio: 'PENDIENTE', limit: 1000 });
+
+  const proximaProgramacionPorAlumno = useMemo(() => {
+    const mapa = new Map();
+    for (const row of programacionesData?.data || []) {
+      if (row.estado_envio !== 'PENDIENTE') continue;
+      const key = String(row.id_alumno);
+      const actual = mapa.get(key);
+      const clave = `${row.fecha_envio}${row.hora_envio}`;
+      const claveActual = actual ? `${actual.fecha_envio}${actual.hora_envio}` : null;
+      if (!actual || clave < claveActual) {
+        mapa.set(key, row);
+      }
+    }
+    return mapa;
+  }, [programacionesData]);
 
   const alumnos = alumnosData?.data || [];
   const pagination = alumnosData?.pagination || {};
 
-  const planes = (planesData?.data || []).map((p) => ({
+  const programas = (programasData?.data || []).map((p) => ({
     value: p.id,
     label: p.nombre,
   }));
@@ -63,16 +168,11 @@ export default function AlumnosPage() {
     { key: 'telefono', label: 'Teléfono' },
     { key: 'email', label: 'Correo' },
     {
-      key: 'plan',
-      label: 'Plan',
-      render: (row) => row.plan?.nombre || 'Sin plan'
-    },
-    { key: 'proxima_clase', label: 'Próxima Clase', render: (row) => proximaClase(row.horarios) },
-    { key: 'estado_pago', label: 'Estado de Pago', render: (row) => <Badge status={row.estado_pago} /> },
-    {
-      key: 'fecha_vencimiento',
-      label: 'Vencimiento Mensual',
-      render: (row) => (row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : 'Sin registrar'),
+      key: 'envio_whatsapp',
+      label: 'Envío WhatsApp',
+      render: (row) => (
+        <EnvioSwitchCell idAlumno={row.id} programacion={proximaProgramacionPorAlumno.get(String(row.id))} />
+      ),
     },
     {
       key: 'actions',
@@ -106,14 +206,15 @@ export default function AlumnosPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar alumno por nombre o correo..." />
           <Select
-            options={planes}
-            value={planFilter}
-            onChange={setPlanFilter}
-            placeholder="Filtrar por plan"
+            options={programas}
+            value={programaFilter}
+            onChange={setProgramaFilter}
+            placeholder="Filtrar por programa"
             searchable
           />
           <Select
             options={[
+              { value: '', label: 'Todos' },
               { value: 'true', label: 'Activo' },
               { value: 'false', label: 'Inactivo' },
             ]}

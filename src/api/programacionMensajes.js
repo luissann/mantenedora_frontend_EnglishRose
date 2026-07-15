@@ -35,7 +35,6 @@ export async function getNotificaciones(params = {}) {
   return data;
 }
 
-export async function enviarWhatsappAhora(idAlumno) {
-  const { data } = await client.post(`/alumnos/${idAlumno}/whatsapp/enviar-ahora`);
-  return data;
-}
+// Nota: el endpoint POST /alumnos/:id/whatsapp/enviar-ahora sigue existiendo
+// en el backend por compatibilidad, pero el nuevo flujo ya no lo usa: el
+// switch "activo" de cada ProgramacionMensaje lo reemplaza.
