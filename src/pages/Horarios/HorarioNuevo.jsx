@@ -14,8 +14,8 @@ import { useAlumnos } from '../../hooks/useAlumnos';
 import { useAlumnoProgramasPorAlumno } from '../../hooks/useAlumnoProgramas';
 
 const schema = z.object({
-  id_alumno: z.string().min(1, 'Alumno requerido'),
-  id_alumno_programa: z.string().min(1, 'Programa del alumno requerido'),
+  id_alumno: z.string().min(1, 'Estudiante requerido'),
+  id_alumno_programa: z.string().min(1, 'Programa del estudiante requerido'),
   dia_semana: z.string().min(1, 'Día requerido'),
   hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
   hora_fin: z.string().min(1, 'Hora de fin requerida'),
@@ -64,7 +64,7 @@ export default function HorarioNuevoPage() {
 
   const alumnos = normalizeAlumnosResponse(alumnosData).map((a) => ({
     value: String(a.id),
-    label: [a.nombre, a.segundo_nombre, a.apellido, a.segundo_apellido].filter(Boolean).join(' ') || a.email || `Alumno ${a.id}`,
+    label: a.nombre || a.email || `Estudiante ${a.id}`,
   }));
 
   const alumnoProgramas = normalizeListResponse(alumnoProgramasData).map((ap) => ({
@@ -94,7 +94,7 @@ export default function HorarioNuevoPage() {
         <Card watermark>
           <div className="space-y-4">
             <Select
-              label="Alumno"
+              label="Estudiante"
               options={alumnos}
               value={watch('id_alumno')}
               onChange={(value) => {
@@ -105,11 +105,11 @@ export default function HorarioNuevoPage() {
               error={errors.id_alumno?.message}
             />
             <Select
-              label="Programa del Alumno"
+              label="Programa del Estudiante"
               options={alumnoProgramas}
               value={watch('id_alumno_programa')}
               onChange={(value) => setValue('id_alumno_programa', value)}
-              placeholder={idAlumno ? 'Seleccionar programa...' : 'Selecciona primero un alumno'}
+              placeholder={idAlumno ? 'Seleccionar programa...' : 'Selecciona primero un estudiante'}
               searchable
               error={errors.id_alumno_programa?.message}
             />

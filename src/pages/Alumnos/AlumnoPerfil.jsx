@@ -39,7 +39,7 @@ function EditarProgramacionModal({ programacion, onClose }) {
   return (
     <Modal isOpen={!!programacion} onClose={onClose} title="Editar Programación de WhatsApp" size="md">
       <div className="space-y-4">
-        <DatePicker label="Fecha de Envío" value={fechaEnvio} onChange={setFechaEnvio} />
+        <DatePicker label="Fecha de Envío" value={fechaEnvio} onChange={setFechaEnvio} minDate={new Date()} />
         <div>
           <label className="text-sm text-text-secondary">Hora de Envío</label>
           <input
@@ -95,14 +95,7 @@ export default function AlumnoPerfilPage() {
     );
   }
 
-  const nombreCompleto = [
-    alumno.nombre,
-    alumno.segundo_nombre,
-    alumno.apellido,
-    alumno.segundo_apellido,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const nombreCompleto = alumno.nombre;
 
   const ultimoPago = alumno.pagos?.[0];
   const hoy = new Date();
@@ -115,7 +108,7 @@ export default function AlumnoPerfilPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Perfil del Alumno" />
+      <PageHeader title="Perfil del Estudiante" />
 
       <Card relative watermark>
         <div className="grid gap-6 md:grid-cols-3">
@@ -345,7 +338,7 @@ export default function AlumnoPerfilPage() {
           variant="primary"
           onClick={() => navigate(`/alumnos/${id}/editar`)}
         >
-          Editar Alumno
+          Editar Estudiante
         </Button>
 
         <Button

@@ -3,7 +3,7 @@ import { Calendar } from 'lucide-react';
 import DatePickerLib from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-export function DatePicker({ value, onChange, label, error, placeholder = 'DD/MM/YYYY' }) {
+export function DatePicker({ value, onChange, label, error, placeholder = 'DD/MM/YYYY', minDate }) {
   const [selectedDate, setSelectedDate] = useState(value ? new Date(value) : null);
 
   useEffect(() => {
@@ -24,9 +24,13 @@ export function DatePicker({ value, onChange, label, error, placeholder = 'DD/MM
         <DatePickerComponent
           selected={selectedDate}
           onChange={handleChange}
+          minDate={minDate}
           dateFormat="dd/MM/yyyy"
           className={`w-full rounded-2xl border border-border-input bg-white px-4 py-3 pr-12 text-sm text-text-primary outline-none focus:border-rose focus:ring-2 focus:ring-rose/20`}
           placeholderText={placeholder}
+          portalId="datepicker-portal"
+          popperClassName="!z-[60]"
+          popperProps={{ strategy: 'fixed' }}
         />
         <Calendar className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" />
       </div>

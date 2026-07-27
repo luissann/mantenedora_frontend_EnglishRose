@@ -156,7 +156,7 @@ export function AlumnoForm({ control, register, watch, setValue, errors, onSubmi
   const alias = watch('alias');
   const nombre = watch('nombre');
 
-  const nombrePreview = alias?.trim() || nombre?.trim() || 'Alumno';
+  const nombrePreview = alias?.trim() || nombre?.trim() || 'Estudiante';
 
   const ordenDiasPreview = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
   const lineasPreview = programasWatch
@@ -181,22 +181,15 @@ export function AlumnoForm({ control, register, watch, setValue, errors, onSubmi
             <h3 className="text-lg font-semibold">Información Personal</h3>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Primer Nombre" placeholder="Ej: María" {...register('nombre')} error={errors.nombre?.message} />
+            <Input label="Nombre" placeholder="Ej: María González Pérez" {...register('nombre')} error={errors.nombre?.message} />
             <Input label="Alias" placeholder="Ej: Majo (opcional, se usa en el saludo de WhatsApp)" {...register('alias')} error={errors.alias?.message} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Segundo Nombre" placeholder="Opcional" {...register('segundo_nombre')} />
-            <Input label="Segundo Apellido" placeholder="Opcional" {...register('segundo_apellido')} />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Primer Apellido" placeholder="Ej: González" {...register('apellido')} error={errors.apellido?.message} />
             <Input label="Teléfono" placeholder="+56 9 1234 5678" {...register('telefono')} error={errors.telefono?.message} />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
             <Input label="Correo Electrónico" type="email" placeholder="correo@ejemplo.com" {...register('email')} error={errors.email?.message} />
-            <DatePicker label="Fecha de Ingreso" value={watch('fecha_ingreso')} onChange={(date) => setValue('fecha_ingreso', date)} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
+            <DatePicker label="Fecha de Ingreso" value={watch('fecha_ingreso')} onChange={(date) => setValue('fecha_ingreso', date)} />
             <Toggle label="Estado de Actividad" value={watch('activo')} onChange={(value) => setValue('activo', value)} />
           </div>
           <div>
@@ -205,7 +198,7 @@ export function AlumnoForm({ control, register, watch, setValue, errors, onSubmi
               {...register('observaciones')}
               className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none transition focus:border-rose focus:ring-2 focus:ring-rose/20"
               rows={3}
-              placeholder="Agrega notas sobre el alumno..."
+              placeholder="Agrega notas sobre el estudiante..."
             />
           </div>
         </div>

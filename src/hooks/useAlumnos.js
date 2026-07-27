@@ -31,10 +31,10 @@ export function useCrearAlumno() {
     mutationFn: crearAlumno,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alumnos'] });
-      toast.success('Alumno creado exitosamente');
+      toast.success('Estudiante creado exitosamente');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al crear alumno');
+      toast.error(error.response?.data?.message || 'Error al crear estudiante');
     },
   });
 }
@@ -47,10 +47,10 @@ export function useActualizarAlumno() {
       queryClient.invalidateQueries({ queryKey: ['alumnos'] });
       queryClient.invalidateQueries({ queryKey: ['alumno'] });
       queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
-      toast.success('Alumno actualizado exitosamente');
+      toast.success('Estudiante actualizado exitosamente');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al actualizar alumno');
+      toast.error(error.response?.data?.message || 'Error al actualizar estudiante');
     },
   });
 }
@@ -61,10 +61,10 @@ export function useEliminarAlumno() {
     mutationFn: eliminarAlumno,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alumnos'] });
-      toast.success('Alumno eliminado exitosamente');
+      toast.success('Estudiante eliminado exitosamente');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al eliminar alumno');
+      toast.error(error.response?.data?.message || 'Error al eliminar estudiante');
     },
   });
 }

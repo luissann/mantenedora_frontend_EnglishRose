@@ -44,7 +44,7 @@ export function GlobalSearch() {
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          placeholder="Buscar alumno..."
+          placeholder="Buscar estudiante..."
           className="w-full rounded-2xl border border-border-input bg-white py-3 pl-12 pr-4 text-sm text-text-primary outline-none transition focus:border-rose focus:ring-2 focus:ring-rose/20"
         />
       </label>
@@ -59,7 +59,7 @@ export function GlobalSearch() {
             <>
               {alumnos.length > 0 && (
                 <div className="mb-1">
-                  <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text-muted">Alumnos</p>
+                  <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-text-muted">Estudiantes</p>
                   {alumnos.map((a) => (
                     <button
                       key={`alumno-${a.id}`}
@@ -68,7 +68,7 @@ export function GlobalSearch() {
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-rose-light/60"
                     >
                       <GraduationCap className="h-4 w-4 shrink-0 text-rose" />
-                      <span className="flex-1 truncate">{a.nombre} {a.apellido}</span>
+                      <span className="flex-1 truncate">{a.nombre}</span>
                       {a.telefono && <span className="shrink-0 text-xs text-text-muted">{a.telefono}</span>}
                     </button>
                   ))}

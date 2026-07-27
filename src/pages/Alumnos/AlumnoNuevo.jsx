@@ -5,8 +5,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '../../components/shared/PageHeader';
-import { crearAlumno } from '../../api/alumnos';
-import { crearProgramasYHorarios } from '../../utils/alumnoProgramaSync';
+import { crearAlumnoCompleto } from '../../api/alumnos';
 import { AlumnoForm } from './AlumnoForm';
 
 const horarioSchema = z.object({
@@ -37,10 +36,7 @@ const programaSchema = z
   });
 
 const schema = z.object({
-  nombre: z.string().min(1, 'El primer nombre es requerido'),
-  segundo_nombre: z.string().optional(),
-  apellido: z.string().min(1, 'El apellido es requerido'),
-  segundo_apellido: z.string().optional(),
+  nombre: z.string().min(1, 'El nombre es requerido'),
   alias: z.string().optional(),
   telefono: z.string().min(1, 'Teléfono requerido'),
   email: z.string().email('Correo inválido').optional().or(z.literal('')),
@@ -49,7 +45,7 @@ const schema = z.object({
   observaciones: z.string().optional(),
   dia_envio_mensaje: z.string().optional(),
   hora_envio_mensaje: z.string().optional(),
-  programas: z.array(programaSchema).max(3, 'Máximo 3 programas por alumno'),
+  programas: z.array(programaSchema).max(3, 'Máximo 3 programas por estudiante'),
 });
 
 export default function AlumnoNuevoPage() {
@@ -67,9 +63,6 @@ export default function AlumnoNuevoPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       nombre: '',
-      segundo_nombre: '',
-      apellido: '',
-      segundo_apellido: '',
       alias: '',
       telefono: '',
       email: '',
@@ -83,18 +76,14 @@ export default function AlumnoNuevoPage() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    let idAlumno;
     try {
       let fechaFormateada = values.fecha_ingreso;
       if (values.fecha_ingreso instanceof Date) {
         fechaFormateada = values.fecha_ingreso.toISOString().split('T')[0];
       }
 
-      const res = await crearAlumno({
+      const res = await crearAlumnoCompleto({
         nombre: values.nombre,
-        segundo_nombre: values.segundo_nombre || null,
-        apellido: values.apellido,
-        segundo_apellido: values.segundo_apellido || null,
         alias: values.alias || null,
         telefono: values.telefono,
         email: values.email || null,
@@ -103,27 +92,32 @@ export default function AlumnoNuevoPage() {
         observaciones: values.observaciones || null,
         dia_envio_mensaje: values.dia_envio_mensaje || null,
         hora_envio_mensaje: values.hora_envio_mensaje || '09:00',
+        programas: (values.programas || []).map((programa) => ({
+          id_programa: Number(programa.id_programa),
+          id_profesor: programa.id_profesor ? Number(programa.id_profesor) : null,
+          frecuencia: Number(programa.frecuencia),
+          valor_clase_clp: Number(programa.valor_clase_clp),
+          horarios: (programa.horarios || []).map((horario) => ({
+            dia_semana: horario.dia_semana,
+            hora_inicio: horario.hora_inicio,
+            hora_fin: horario.hora_fin || undefined,
+            detalle: horario.detalle || null,
+          })),
+        })),
       });
-      idAlumno = res?.data?.id;
-
-      await crearProgramasYHorarios(idAlumno, values.programas || []);
+      const idAlumno = res?.data?.id;
 
       queryClient.invalidateQueries({ queryKey: ['alumnos'] });
-      toast.success('Alumno creado exitosamente');
+      toast.success('Estudiante creado exitosamente');
       navigate(`/alumnos/${idAlumno}`);
     } catch (error) {
-      if (idAlumno) {
-        toast.error('El alumno se creó pero hubo un error guardando sus programas u horarios. Revisa y completa desde "Editar Alumno".');
-        navigate(`/alumnos/${idAlumno}/editar`);
-      } else {
-        toast.error(error.response?.data?.message || 'Error al crear alumno');
-      }
+      toast.error(error.response?.data?.message || 'Error al crear estudiante');
     }
   });
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Crear Alumno" />
+      <PageHeader title="Crear Estudiante" />
       <AlumnoForm
         control={control}
         register={register}
@@ -133,7 +127,7 @@ export default function AlumnoNuevoPage() {
         onSubmit={onSubmit}
         onCancel={() => navigate('/alumnos')}
         submitting={isSubmitting}
-        submitLabel="Guardar Alumno"
+        submitLabel="Guardar Estudiante"
       />
     </div>
   );

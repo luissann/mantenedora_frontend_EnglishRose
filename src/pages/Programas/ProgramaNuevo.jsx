@@ -11,9 +11,6 @@ import { useCrearPrograma } from '../../hooks/useProgramas';
 const schema = z.object({
   nombre: z.string().min(1, 'Nombre del programa requerido'),
   descripcion: z.string().optional(),
-  precio_clp: z.coerce.number().min(0, 'Precio CLP requerido'),
-  precio_usd: z.coerce.number().min(0, 'Precio USD requerido'),
-  clases_semana: z.coerce.number().min(1, 'Clases por semana requeridas'),
   activo: z.coerce.boolean(),
 });
 
@@ -32,9 +29,6 @@ export default function ProgramaNuevoPage() {
     defaultValues: {
       nombre: '',
       descripcion: '',
-      precio_clp: 0,
-      precio_usd: 0,
-      clases_semana: 1,
       activo: true,
     },
   });
@@ -45,9 +39,6 @@ export default function ProgramaNuevoPage() {
     try {
       await createMutation.mutateAsync({
         ...values,
-        precio_clp: Number(values.precio_clp),
-        precio_usd: Number(values.precio_usd),
-        clases_semana: Number(values.clases_semana),
         activo: values.activo ? 1 : 0,
       });
       navigate('/programas');
@@ -70,9 +61,6 @@ export default function ProgramaNuevoPage() {
                 rows={3}
               />
             </div>
-            <Input label="Precio CLP" type="number" step="0.01" {...register('precio_clp', { valueAsNumber: true })} error={errors.precio_clp?.message} />
-            <Input label="Precio USD" type="number" step="0.01" {...register('precio_usd', { valueAsNumber: true })} error={errors.precio_usd?.message} />
-            <Input label="Clases por semana" type="number" {...register('clases_semana', { valueAsNumber: true })} error={errors.clases_semana?.message} />
             <div>
               <p className="mb-2 text-sm text-text-secondary">Estado</p>
               <label className="flex items-center gap-2">

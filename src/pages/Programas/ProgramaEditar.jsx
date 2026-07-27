@@ -13,9 +13,6 @@ import { useActualizarPrograma, usePrograma } from '../../hooks/useProgramas';
 const schema = z.object({
   nombre: z.string().min(1, 'Nombre del programa requerido'),
   descripcion: z.string().optional(),
-  precio_clp: z.coerce.number().min(0, 'Precio CLP requerido'),
-  precio_usd: z.coerce.number().min(0, 'Precio USD requerido'),
-  clases_semana: z.coerce.number().min(0, 'Clases por semana requerido'),
   activo: z.coerce.boolean(),
 });
 
@@ -37,9 +34,6 @@ export default function ProgramaEditarPage() {
     defaultValues: {
       nombre: '',
       descripcion: '',
-      precio_clp: 0,
-      precio_usd: 0,
-      clases_semana: 0,
       activo: true,
     },
   });
@@ -50,9 +44,6 @@ export default function ProgramaEditarPage() {
     reset({
       nombre: programa.nombre || '',
       descripcion: programa.descripcion || '',
-      precio_clp: Number(programa.precio_clp || 0),
-      precio_usd: Number(programa.precio_usd || 0),
-      clases_semana: Number(programa.clases_semana || 0),
       activo: Boolean(programa.activo),
     });
   }, [programaData, reset]);
@@ -94,9 +85,6 @@ export default function ProgramaEditarPage() {
                 rows={3}
               />
             </div>
-            <Input label="Precio CLP" type="number" step="0.01" {...register('precio_clp', { valueAsNumber: true })} error={errors.precio_clp?.message} />
-            <Input label="Precio USD" type="number" step="0.01" {...register('precio_usd', { valueAsNumber: true })} error={errors.precio_usd?.message} />
-            <Input label="Clases por semana" type="number" {...register('clases_semana', { valueAsNumber: true })} error={errors.clases_semana?.message} />
             <div>
               <p className="mb-2 text-sm text-text-secondary">Estado</p>
               <label className="flex items-center gap-2">

@@ -34,7 +34,3 @@ export async function getNotificaciones(params = {}) {
   const { data } = await client.get('/notificaciones', { params });
   return data;
 }
-
-// Nota: el endpoint POST /alumnos/:id/whatsapp/enviar-ahora sigue existiendo
-// en el backend por compatibilidad, pero el nuevo flujo ya no lo usa: el
-// switch "activo" de cada ProgramacionMensaje lo reemplaza.

@@ -10,7 +10,6 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useProgramas, useEliminarPrograma } from '../../hooks/useProgramas';
-import { formatCLP, formatUSD } from '../../utils/formatters';
 
 export default function ProgramasIndexPage() {
   const navigate = useNavigate();
@@ -32,9 +31,6 @@ export default function ProgramasIndexPage() {
   const columns = [
     { key: 'nombre', label: 'Nombre del Programa' },
     { key: 'descripcion', label: 'Descripción' },
-    { key: 'precio_clp', label: 'Precio CLP', render: (row) => formatCLP(row.precio_clp) },
-    { key: 'precio_usd', label: 'Precio USD', render: (row) => formatUSD(row.precio_usd) },
-    { key: 'clases_semana', label: 'Clases por semana' },
     { key: 'activo', label: 'Estado', render: (row) => <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${row.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>{row.activo ? 'Activo' : 'Inactivo'}</span> },
     {
       key: 'actions',

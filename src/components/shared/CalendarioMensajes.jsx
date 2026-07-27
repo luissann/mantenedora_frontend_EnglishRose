@@ -151,7 +151,7 @@ export function CalendarioMensajes() {
                 className="flex items-center justify-between rounded-2xl border border-border px-3 py-2 text-sm"
               >
                 <span className="truncate">
-                  {[registro.alumno?.nombre, registro.alumno?.apellido].filter(Boolean).join(' ') || 'Alumno'}
+                  {[registro.alumno?.nombre, registro.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante'}
                 </span>
                 <span className="flex shrink-0 items-center gap-1.5 text-text-secondary">
                   <span className={`h-2 w-2 rounded-full ${ESTADO_DOT[registro.estado_envio]}`} />

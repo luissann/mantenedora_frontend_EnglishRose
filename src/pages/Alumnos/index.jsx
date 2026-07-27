@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Edit, Trash2, Plus } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus, Send } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -8,8 +8,10 @@ import { Select } from '../../components/ui/Select';
 import { Table } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import { Toggle } from '../../components/ui/Toggle';
+import { Modal } from '../../components/ui/Modal';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
+import { DiaSemanaCalendarPicker } from '../../components/shared/DiaSemanaCalendarPicker';
 import { Spinner } from '../../components/ui/Spinner';
 import { useAlumnos, useEliminarAlumno } from '../../hooks/useAlumnos';
 import { useProgramas } from '../../hooks/useProgramas';
@@ -18,7 +20,9 @@ import {
   useActualizarProgramacionMensaje,
   useCrearProgramacionMensaje,
 } from '../../hooks/useProgramacionMensajes';
+import { useConfiguracionSistema, useActualizarConfiguracionSistema } from '../../hooks/useConfiguracionSistema';
 import { formatDate, formatTime } from '../../utils/formatters';
+import { DIAS_DISPLAY } from '../../utils/constants';
 
 
 function ReprogramarForm({ idAlumno, onDone, onCancel }) {
@@ -41,6 +45,7 @@ function ReprogramarForm({ idAlumno, onDone, onCancel }) {
         <input
           type="date"
           value={fecha}
+          min={new Date().toISOString().split('T')[0]}
           onChange={(e) => setFecha(e.target.value)}
           className="w-32 rounded-lg border border-border-input bg-white px-1.5 py-1 text-xs outline-none focus:border-rose"
         />
@@ -111,6 +116,90 @@ function EnvioSwitchCell({ idAlumno, programacion }) {
   );
 }
 
+function EnvioMasivoButton() {
+  const { data: configData } = useConfiguracionSistema();
+  const actualizarMutation = useActualizarConfiguracionSistema();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [diaSemana, setDiaSemana] = useState('DOMINGO');
+  const [hora, setHora] = useState('20:00');
+
+  const config = configData?.data;
+  const activo = !!config?.envio_masivo_activo;
+
+  useEffect(() => {
+    if (!config) return;
+    setDiaSemana(config.envio_masivo_dia_semana || 'DOMINGO');
+    setHora((config.envio_masivo_hora || '20:00:00').slice(0, 5));
+  }, [config]);
+
+  // El switch usa siempre el día/hora ya guardado (o el default si nunca se
+  // configuró); para cambiar día/hora está el modal, que además activa.
+  const alternar = (nuevoActivo) => {
+    actualizarMutation.mutate({
+      envio_masivo_activo:     nuevoActivo,
+      envio_masivo_dia_semana: config?.envio_masivo_dia_semana || diaSemana,
+      envio_masivo_hora:       (config?.envio_masivo_hora || hora).slice(0, 5),
+    });
+  };
+
+  const guardarYActivar = () => {
+    actualizarMutation.mutate(
+      { envio_masivo_activo: true, envio_masivo_dia_semana: diaSemana, envio_masivo_hora: hora },
+      { onSuccess: () => setModalOpen(false) }
+    );
+  };
+
+  return (
+    <>
+      <div className="flex items-center gap-2 rounded-2xl border border-border-input bg-white px-3 py-2">
+        <Toggle
+          value={activo}
+          trueLabel="Envío masivo activado"
+          falseLabel="Envío masivo desactivado"
+          onChange={alternar}
+        />
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium text-rose hover:underline"
+        >
+          <Send className="h-3.5 w-3.5" />
+          {config
+            ? `${DIAS_DISPLAY[config.envio_masivo_dia_semana] || config.envio_masivo_dia_semana} ${String(config.envio_masivo_hora || '').slice(0, 5)}`
+            : 'Configurar'}
+        </button>
+      </div>
+
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Envío masivo automático" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            El día y la hora que elijas aquí tienen prioridad sobre cualquier envío
+            individual que un estudiante ya tuviera agendado: al activarlo (o al guardar un
+            cambio de horario), todos los estudiantes activos quedan reagendados exactamente
+            a esa fecha y hora. Se repite cada semana hasta que lo desactives con el switch;
+            que se haya enviado un mensaje no lo apaga.
+          </p>
+          <DiaSemanaCalendarPicker label="Día de la semana" diaSemana={diaSemana} onChange={setDiaSemana} />
+          <div>
+            <label className="text-sm text-text-secondary">Hora</label>
+            <input
+              type="time"
+              value={hora}
+              onChange={(e) => setHora(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button variant="primary" onClick={guardarYActivar} loading={actualizarMutation.isPending}>
+              Guardar y activar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 export default function AlumnosPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -163,7 +252,7 @@ export default function AlumnosPage() {
     {
       key: 'nombre',
       label: 'Nombre Completo',
-      render: (row) => [row.nombre, row.segundo_nombre, row.apellido, row.segundo_apellido].filter(Boolean).join(' '),
+      render: (row) => row.nombre,
     },
     { key: 'telefono', label: 'Teléfono' },
     { key: 'email', label: 'Correo' },
@@ -195,16 +284,17 @@ export default function AlumnosPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Alumnos" />
+      <PageHeader title="Estudiantes" />
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/alumnos/nuevo')}>
-            Nuevo Alumno
+            Nuevo Estudiante
           </Button>
+          <EnvioMasivoButton />
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
-          <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar alumno por nombre o correo..." />
+          <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estudiante por nombre o correo..." />
           <Select
             options={programas}
             value={programaFilter}
@@ -230,7 +320,7 @@ export default function AlumnosPage() {
           <Spinner size="lg" />
         </div>
       ) : alumnos.length === 0 ? (
-        <EmptyState title="No se encontraron alumnos" actionLabel="Crear Alumno" onAction={() => navigate('/alumnos/nuevo')} />
+        <EmptyState title="No se encontraron estudiantes" actionLabel="Crear Estudiante" onAction={() => navigate('/alumnos/nuevo')} />
       ) : (
         <>
           <Table columns={columns} data={alumnos} onRowClick={(row) => navigate(`/alumnos/${row.id}`)} />
@@ -240,8 +330,8 @@ export default function AlumnosPage() {
 
       <ConfirmDialog
         isOpen={!!deleteId}
-        title="Eliminar Alumno"
-        message="¿Estás seguro de que deseas eliminar este alumno? Esta acción no se puede deshacer."
+        title="Eliminar Estudiante"
+        message="¿Estás seguro de que deseas eliminar este estudiante? Esta acción no se puede deshacer."
         onConfirm={() => {
           deleteMutation.mutate(deleteId);
           setDeleteId(null);

@@ -39,6 +39,8 @@ export function useCrearProgramacionMensaje() {
     mutationFn: crearProgramacionMensaje,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       toast.success('Programación de mensajes creada');
     },
     onError: (error) => {
@@ -54,6 +56,8 @@ export function useActualizarProgramacionMensaje() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
       queryClient.invalidateQueries({ queryKey: ['programacion-mensaje'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       toast.success('Programación actualizada');
     },
     onError: (error) => {
@@ -68,6 +72,8 @@ export function useEliminarProgramacionMensaje() {
     mutationFn: eliminarProgramacionMensaje,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       toast.success('Programación eliminada');
     },
     onError: (error) => {

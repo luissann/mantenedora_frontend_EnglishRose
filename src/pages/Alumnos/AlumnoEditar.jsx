@@ -42,9 +42,6 @@ const programaSchema = z
 
 const schema = z.object({
   nombre: z.string().min(1),
-  segundo_nombre: z.string().optional(),
-  apellido: z.string().min(1),
-  segundo_apellido: z.string().optional(),
   alias: z.string().optional(),
   telefono: z.string().min(1),
   email: z.string().email('Correo inválido').optional().or(z.literal('')),
@@ -53,7 +50,7 @@ const schema = z.object({
   observaciones: z.string().optional(),
   dia_envio_mensaje: z.string().optional(),
   hora_envio_mensaje: z.string().optional(),
-  programas: z.array(programaSchema).max(3, 'Máximo 3 programas por alumno'),
+  programas: z.array(programaSchema).max(3, 'Máximo 3 programas por estudiante'),
 });
 
 export default function AlumnoEditarPage() {
@@ -89,9 +86,6 @@ export default function AlumnoEditarPage() {
 
     reset({
       nombre: alumno.nombre ?? '',
-      segundo_nombre: alumno.segundo_nombre ?? '',
-      apellido: alumno.apellido ?? '',
-      segundo_apellido: alumno.segundo_apellido ?? '',
       alias: alumno.alias ?? '',
       telefono: alumno.telefono ?? '',
       email: alumno.email ?? '',
@@ -136,9 +130,6 @@ export default function AlumnoEditarPage() {
 
       await actualizarAlumno(id, {
         nombre: values.nombre,
-        segundo_nombre: values.segundo_nombre || null,
-        apellido: values.apellido,
-        segundo_apellido: values.segundo_apellido || null,
         alias: values.alias || null,
         telefono: values.telefono,
         email: values.email || null,
@@ -154,16 +145,16 @@ export default function AlumnoEditarPage() {
       queryClient.invalidateQueries({ queryKey: ['alumnos'] });
       queryClient.invalidateQueries({ queryKey: ['alumno'] });
       queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
-      toast.success('Alumno actualizado exitosamente');
+      toast.success('Estudiante actualizado exitosamente');
       navigate(`/alumnos/${id}`);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error al actualizar alumno');
+      toast.error(error.response?.data?.message || 'Error al actualizar estudiante');
     }
   });
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Editar Alumno" />
+      <PageHeader title="Editar Estudiante" />
       <AlumnoForm
         control={control}
         register={register}

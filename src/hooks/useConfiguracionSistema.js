@@ -15,6 +15,12 @@ export function useActualizarConfiguracionSistema() {
     mutationFn: actualizarConfiguracionSistema,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['configuracion-sistema'] });
+      // Activar/desactivar o editar el envío masivo reagenda de inmediato a
+      // todos los alumnos en el backend — sin esto, el listado de Estudiantes
+      // y el calendario del Home seguían mostrando las fechas viejas hasta
+      // un refetch por otra vía.
+      queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
       toast.success('Configuración actualizada');
     },
     onError: (error) => {

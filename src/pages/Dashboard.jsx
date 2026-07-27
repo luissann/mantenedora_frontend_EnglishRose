@@ -42,8 +42,8 @@ export default function Dashboard() {
           <CalendarioMensajes />
         </div>
 
-        <StatCard className="xl:col-start-1 xl:row-start-1" icon={Users} label="Total Alumnos" value={dashboard.totalAlumnos || '0'} color="rose" />
-        <StatCard className="xl:col-start-1 xl:row-start-2" icon={UserCheck} label="Alumnos Activos" value={dashboard.alumnosActivos || '0'} color="green" />
+        <StatCard className="xl:col-start-1 xl:row-start-1" icon={Users} label="Total Estudiantes" value={dashboard.totalAlumnos || '0'} color="rose" />
+        <StatCard className="xl:col-start-1 xl:row-start-2" icon={UserCheck} label="Estudiantes Activos" value={dashboard.alumnosActivos || '0'} color="green" />
         <StatCard className="xl:col-start-1 xl:row-start-3" icon={Layers} label="Total Programas" value={dashboard.totalProgramas || '0'} color="rose" />
 
         <Card watermark className="xl:col-start-1 xl:row-start-4">
@@ -62,7 +62,7 @@ export default function Dashboard() {
                   onClick={() => navigate(`/pagos/${pago.id}/editar`)}
                   className="flex w-full flex-col items-start gap-1 rounded-2xl px-3 py-2.5 text-left text-sm hover:bg-rose-light/50"
                 >
-                  <span className="truncate">{pago.alumno?.nombre} {pago.alumno?.apellido}</span>
+                  <span className="truncate">{pago.alumno?.nombre}</span>
                   <span className="flex items-center gap-3 text-text-secondary">
                     {formatCLP(pago.monto)}
                     <span className="text-xs text-text-muted">{formatDate(pago.fecha_vencimiento)}</span>
@@ -93,7 +93,7 @@ export default function Dashboard() {
                   onClick={() => navigate(`/alumnos/${horario.alumno?.id}`)}
                   className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm hover:bg-rose-light/50"
                 >
-                  <span className="truncate">{horario.alumno?.nombre} {horario.alumno?.apellido}</span>
+                  <span className="truncate">{horario.alumno?.nombre}</span>
                   <span className="ml-3 shrink-0 text-text-secondary">{formatTime(horario.hora_inicio)}</span>
                 </button>
               ))}

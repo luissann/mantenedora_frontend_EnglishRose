@@ -1,8 +1,9 @@
-// Reconciliación de AlumnoPrograma + Horarios al guardar el formulario de Alumno.
-// El backend no ofrece un endpoint transaccional "guardar todo de una", así
-// que el frontend arma la secuencia de POST/PUT/DELETE necesaria comparando
-// lo que había (programasOriginal, sólo presente al editar) contra lo que
-// quedó en el formulario (programasForm).
+// Reconciliación de AlumnoPrograma + Horarios al EDITAR el formulario de un
+// Alumno existente (la creación usa /alumnos/completo, transaccional en el
+// backend). Editar sigue sin endpoint transaccional "guardar todo de una",
+// así que el frontend arma la secuencia de POST/PUT/DELETE necesaria
+// comparando lo que había (programasOriginal) contra lo que quedó en el
+// formulario (programasForm).
 import {
   crearAlumnoPrograma,
   actualizarAlumnoPrograma,
@@ -28,19 +29,6 @@ function buildHorarioPayload(idAlumnoPrograma, horario) {
     hora_fin: horario.hora_fin || undefined,
     detalle: horario.detalle || null,
   };
-}
-
-/**
- * Crea, desde cero, los AlumnoPrograma y Horarios de un alumno recién creado.
- */
-export async function crearProgramasYHorarios(idAlumno, programasForm) {
-  for (const programa of programasForm) {
-    const res = await crearAlumnoPrograma(buildAlumnoProgramaPayload(idAlumno, programa));
-    const idAlumnoPrograma = res?.data?.id;
-    for (const horario of programa.horarios || []) {
-      await crearHorario(buildHorarioPayload(idAlumnoPrograma, horario));
-    }
-  }
 }
 
 /**

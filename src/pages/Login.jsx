@@ -36,10 +36,13 @@ function useStarfield(count) {
   );
 }
 
+const RUT_RECORDADO_KEY = 'era_rut_recordado';
+
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loggedIn, setLoggedIn]         = useState(false);
   const [showQRModal, setShowQRModal]   = useState(false);
+  const [recordarSesion, setRecordarSesion] = useState(() => Boolean(localStorage.getItem(RUT_RECORDADO_KEY)));
 
   const loginStore      = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -74,7 +77,7 @@ export default function Login() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { rut: '', password: '' },
+    defaultValues: { rut: localStorage.getItem(RUT_RECORDADO_KEY) || '', password: '' },
   });
 
   const rutRegister   = register('rut');
@@ -85,6 +88,13 @@ export default function Login() {
     try {
       const response = await loginRequest(values.rut, values.password);
       loginStore(response.data.usuario);
+
+      if (recordarSesion) {
+        localStorage.setItem(RUT_RECORDADO_KEY, values.rut);
+      } else {
+        localStorage.removeItem(RUT_RECORDADO_KEY);
+      }
+
       toast.success('Sesión iniciada correctamente');
       setLoggedIn(true);  // Activar polling de WhatsApp
     } catch (error) {
@@ -216,6 +226,8 @@ export default function Login() {
                 <label className="inline-flex items-center gap-2">
                   <input
                     type="checkbox"
+                    checked={recordarSesion}
+                    onChange={(event) => setRecordarSesion(event.target.checked)}
                     className="h-4 w-4 rounded border-border-input text-rose focus:ring-rose"
                   />
                   Recordar sesión

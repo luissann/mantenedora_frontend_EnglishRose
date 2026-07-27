@@ -33,7 +33,7 @@ export function useCrearAlumnoPrograma() {
       queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al crear el programa del alumno');
+      toast.error(error.response?.data?.message || 'Error al crear el programa del estudiante');
     },
   });
 }
@@ -48,7 +48,7 @@ export function useActualizarAlumnoPrograma() {
       queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al actualizar el programa del alumno');
+      toast.error(error.response?.data?.message || 'Error al actualizar el programa del estudiante');
     },
   });
 }
@@ -62,7 +62,7 @@ export function useEliminarAlumnoPrograma() {
       queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al eliminar el programa del alumno');
+      toast.error(error.response?.data?.message || 'Error al eliminar el programa del estudiante');
     },
   });
 }

@@ -49,7 +49,7 @@ export default function HorariosIndexPage() {
       label: (
         <SortableHeader
           column="alumno_nombre"
-          label="Alumno"
+          label="Estudiante"
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}

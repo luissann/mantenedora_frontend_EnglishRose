@@ -11,7 +11,7 @@ import useAuthStore from '../../store/authStore';
 // administra directamente desde el perfil de cada Alumno.
 const navItems = [
   { to: '/dashboard', label: 'Panel Principal', icon: LayoutDashboard },
-  { to: '/alumnos', label: 'Alumnos', icon: GraduationCap },
+  { to: '/alumnos', label: 'Estudiantes', icon: GraduationCap },
   { to: '/programas', label: 'Programas', icon: Layers },
   { to: '/profesores', label: 'Profesores', icon: UserCog },
   { to: '/horarios', label: 'Horarios', icon: Clock },

@@ -97,7 +97,7 @@ export default function HorarioSemanalPage() {
                             onClick={() => navigate(`/horarios/${h.id}/editar`)}
                             className="mb-1 block w-full rounded-xl bg-rose-light/70 px-2 py-1.5 text-left text-xs text-rose-text hover:bg-rose-light"
                           >
-                            <div className="font-semibold">{h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : 'Alumno'}</div>
+                            <div className="font-semibold">{h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : 'Estudiante'}</div>
                             <div className="text-text-muted">{formatTime(h.hora_inicio)} - {formatTime(h.hora_fin)}</div>
                           </button>
                         ))}
