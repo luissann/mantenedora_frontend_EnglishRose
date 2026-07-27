@@ -27,7 +27,9 @@ export default function BoletasIndexPage() {
   const actualizarMutation = useActualizarBoleta();
 
   const boletas = boletasData?.data || [];
-  const resumen = resumenData?.data || {};
+  const resumenClp = resumenData?.data?.CLP || {};
+  const resumenUsd = resumenData?.data?.USD || {};
+  const hayResumenUsd = (resumenUsd.cantidadClases || 0) > 0;
 
   const handleCantidadClasesBlur = (boleta, value) => {
     const nueva = Number(value);
@@ -77,11 +79,19 @@ export default function BoletasIndexPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
-        <StatCard icon={Receipt} label="Total Mensual" value={formatCLP(resumen.totalMensual || 0)} color="rose" />
-        <StatCard icon={Percent} label="Retención" value={formatCLP(resumen.totalRetencion || 0)} color="yellow" />
-        <StatCard icon={CreditCard} label="Total Boleta" value={formatCLP(resumen.totalBoleta || 0)} color="green" />
-        <StatCard icon={TrendingUp} label="Ganancia Real" value={formatCLP(resumen.gananciaReal || 0)} color="rose" />
+        <StatCard icon={Receipt} label="Total Mensual (CLP)" value={formatCLP(resumenClp.totalMensual || 0)} color="rose" />
+        <StatCard icon={Percent} label="Retención (CLP)" value={formatCLP(resumenClp.totalRetencion || 0)} color="yellow" />
+        <StatCard icon={CreditCard} label="Total Boleta (CLP)" value={formatCLP(resumenClp.totalBoleta || 0)} color="green" />
+        <StatCard icon={TrendingUp} label="Ganancia Real (CLP)" value={formatCLP(resumenClp.gananciaReal || 0)} color="rose" />
       </div>
+
+      {hayResumenUsd && (
+        <div className="grid gap-6 md:grid-cols-4">
+          <StatCard icon={Receipt} label="Total Mensual (USD)" value={`USD $${Number(resumenUsd.totalMensual || 0).toFixed(2)}`} color="rose" />
+          <StatCard icon={Percent} label="Retención (USD)" value={`USD $${Number(resumenUsd.totalRetencion || 0).toFixed(2)}`} color="yellow" />
+          <StatCard icon={CreditCard} label="Total Boleta (USD)" value={`USD $${Number(resumenUsd.totalBoleta || 0).toFixed(2)}`} color="green" />
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex h-80 items-center justify-center">
@@ -95,7 +105,7 @@ export default function BoletasIndexPage() {
             <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
               <thead className="bg-rose-light/60">
                 <tr>
-                  {['Alumno', 'Valor x Clase', 'Cant. Clases', 'Total Mensual', 'Retención', 'Total Boleta', 'Estado'].map((h) => (
+                  {['Estudiante', 'Valor x Clase', 'Cant. Clases', 'Total Mensual', 'Retención', 'Total Boleta', 'Estado'].map((h) => (
                     <th key={h} className="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">{h}</th>
                   ))}
                 </tr>
@@ -103,7 +113,7 @@ export default function BoletasIndexPage() {
               <tbody>
                 {boletas.map((boleta) => (
                   <tr key={boleta.id} className="border-b border-border last:border-b-0 hover:bg-rose-light/20">
-                    <td className="px-4 py-3">{boleta.alumno ? `${boleta.alumno.nombre} ${boleta.alumno.apellido}` : '-'}</td>
+                    <td className="px-4 py-3">{boleta.alumno ? boleta.alumno.nombre : '-'}</td>
                     <td className="px-4 py-3">{boleta.moneda === 'USD' ? `USD $${Number(boleta.valor_clase).toFixed(2)}` : formatCLP(boleta.valor_clase)}</td>
                     <td className="px-4 py-3">
                       <input

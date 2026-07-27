@@ -60,7 +60,7 @@ export function NotificacionesDropdown({ open, onClose }) {
         ) : (
           notificaciones.map((notif) => {
             const exito = notif.estado_envio === 'ENVIADO';
-            const nombreAlumno = [notif.alumno?.nombre, notif.alumno?.apellido].filter(Boolean).join(' ') || 'Alumno';
+            const nombreAlumno = [notif.alumno?.nombre, notif.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante';
 
             return (
               <div

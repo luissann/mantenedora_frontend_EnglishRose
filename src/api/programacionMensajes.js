@@ -34,8 +34,3 @@ export async function getNotificaciones(params = {}) {
   const { data } = await client.get('/notificaciones', { params });
   return data;
 }
-
-export async function enviarWhatsappAhora(idAlumno) {
-  const { data } = await client.post(`/alumnos/${idAlumno}/whatsapp/enviar-ahora`);
-  return data;
-}

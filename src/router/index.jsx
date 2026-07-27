@@ -17,10 +17,10 @@ const AlumnoNuevoPage = lazy(() => import('../pages/Alumnos/AlumnoNuevo'));
 const AlumnoPerfilPage = lazy(() => import('../pages/Alumnos/AlumnoPerfil'));
 const AlumnoEditarPage = lazy(() => import('../pages/Alumnos/AlumnoEditar'));
 
-// Planes
-const PlanesIndexPage = lazy(() => import('../pages/Planes'));
-const PlanNuevoPage = lazy(() => import('../pages/Planes/PlanNuevo'));
-const PlanEditarPage = lazy(() => import('../pages/Planes/PlanEditar'));
+// Programas
+const ProgramasIndexPage = lazy(() => import('../pages/Programas'));
+const ProgramaNuevoPage = lazy(() => import('../pages/Programas/ProgramaNuevo'));
+const ProgramaEditarPage = lazy(() => import('../pages/Programas/ProgramaEditar'));
 
 // Pagos
 const PagosIndexPage = lazy(() => import('../pages/Pagos'));
@@ -44,11 +44,6 @@ const BoletasIndexPage = lazy(() => import('../pages/Boletas'));
 
 // Pagos a Profesores
 const PagosProfesoresIndexPage = lazy(() => import('../pages/PagosProfesores'));
-
-// WhatsApp
-const WhatsappIndexPage = lazy(() => import('../pages/Whatsapp'));
-const WhatsappNuevoPage = lazy(() => import('../pages/Whatsapp/WhatsappNuevo'));
-const WhatsappEditarPage = lazy(() => import('../pages/Whatsapp/WhatsappEditar'));
 
 // Usuarios
 const UsuariosIndexPage = lazy(() => import('../pages/Usuarios'));
@@ -80,10 +75,10 @@ const router = createBrowserRouter([
       { path: 'alumnos/:id', element: <AlumnoPerfilPage /> },
       { path: 'alumnos/:id/editar', element: <AlumnoEditarPage /> },
 
-      // Planes — módulo desarrollado pero fuera de la 1ra etapa (ver Sidebar.jsx)
-      { path: 'planes', element: <Navigate to="/dashboard" replace /> },
-      { path: 'planes/nuevo', element: <Navigate to="/dashboard" replace /> },
-      { path: 'planes/:id/editar', element: <Navigate to="/dashboard" replace /> },
+      // Programas — requeridos por el flujo de Alumnos (Programa/AlumnoPrograma)
+      { path: 'programas', element: <ProgramasIndexPage /> },
+      { path: 'programas/nuevo', element: <ProgramaNuevoPage /> },
+      { path: 'programas/:id/editar', element: <ProgramaEditarPage /> },
 
       // Pagos — se deja accesible solo el flujo de registrar/editar pago desde
       // el perfil de un Alumno; el listado independiente queda bloqueado.
@@ -108,11 +103,6 @@ const router = createBrowserRouter([
 
       // Pagos a Profesores — ídem
       { path: 'pagos-profesores', element: <Navigate to="/dashboard" replace /> },
-
-      // WhatsApp
-      { path: 'whatsapp', element: <WhatsappIndexPage /> },
-      { path: 'whatsapp/nuevo', element: <WhatsappNuevoPage /> },
-      { path: 'whatsapp/:id/editar', element: <WhatsappEditarPage /> },
 
       // Usuarios
       { path: 'usuarios', element: <UsuariosIndexPage /> },

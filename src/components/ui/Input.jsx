@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 export const Input = React.forwardRef(
   (
@@ -9,16 +9,20 @@ export const Input = React.forwardRef(
       rightIcon,
       className,
       type = 'text',
+      id,
       ...props
     },
     ref
   ) => {
+    const generatedId = useId();
+    const inputId = id || generatedId;
+
     return (
-      <label className={`block text-sm ${className || ''}`}>
+      <div className={`block text-sm ${className || ''}`}>
         {label && (
-          <span className="mb-2 block text-text-secondary">
+          <label htmlFor={inputId} className="mb-2 block text-text-secondary">
             {label}
-          </span>
+          </label>
         )}
 
         <div className="relative">
@@ -29,6 +33,7 @@ export const Input = React.forwardRef(
           )}
 
           <input
+            id={inputId}
             ref={ref}
             type={type}
             className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-rose/20 ${
@@ -40,7 +45,7 @@ export const Input = React.forwardRef(
           />
 
           {rightIcon && (
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary">
               {rightIcon}
             </span>
           )}
@@ -51,7 +56,7 @@ export const Input = React.forwardRef(
             {error}
           </p>
         )}
-      </label>
+      </div>
     );
   }
 );

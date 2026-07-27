@@ -46,7 +46,7 @@ export default function NotificacionesPage() {
           <div className="space-y-3">
             {notificaciones.map((notif) => {
               const exito = notif.estado_envio === 'ENVIADO';
-              const nombreAlumno = [notif.alumno?.nombre, notif.alumno?.apellido].filter(Boolean).join(' ') || 'Alumno';
+              const nombreAlumno = [notif.alumno?.nombre, notif.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante';
 
               return (
                 <Card key={notif.id} watermark>

@@ -1,6 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getHorarios, getHorario, crearHorario, actualizarHorario, eliminarHorario } from '../api/horarios';
+import {
+  getHorarios,
+  getHorario,
+  getHorariosPorAlumno,
+  getHorariosPorPrograma,
+  crearHorario,
+  actualizarHorario,
+  eliminarHorario,
+} from '../api/horarios';
 
 export function useHorarios(filters = {}) {
   return useQuery({
@@ -17,12 +25,29 @@ export function useHorario(id) {
   });
 }
 
+export function useHorariosPorAlumno(idAlumno) {
+  return useQuery({
+    queryKey: ['horarios', 'alumno', idAlumno],
+    queryFn: () => getHorariosPorAlumno(idAlumno),
+    enabled: !!idAlumno,
+  });
+}
+
+export function useHorariosPorPrograma(idAlumnoPrograma) {
+  return useQuery({
+    queryKey: ['horarios', 'programa', idAlumnoPrograma],
+    queryFn: () => getHorariosPorPrograma(idAlumnoPrograma),
+    enabled: !!idAlumnoPrograma,
+  });
+}
+
 export function useCrearHorario() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: crearHorario,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
+      queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
       toast.success('Horario creado exitosamente');
     },
     onError: (error) => {
@@ -38,6 +63,7 @@ export function useActualizarHorario() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
       queryClient.invalidateQueries({ queryKey: ['horario'] });
+      queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
       toast.success('Horario actualizado exitosamente');
     },
     onError: (error) => {
@@ -52,6 +78,7 @@ export function useEliminarHorario() {
     mutationFn: eliminarHorario,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
+      queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
       toast.success('Horario eliminado exitosamente');
     },
     onError: (error) => {

@@ -37,7 +37,7 @@ export default function PagosIndexPage() {
   const pagination = pagosData?.pagination || {};
 
   const columns = [
-    { key: 'alumno_nombre', label: 'Student' },
+    { key: 'alumno_nombre', label: 'Estudiante' },
     { key: 'fecha_pago', label: 'Payment Date', render: (row) => formatDate(row.fecha_pago) },
     { key: 'monto', label: 'Amount', render: (row) => formatCLP(row.monto) },
     { key: 'metodo_pago', label: 'Method' },

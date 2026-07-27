@@ -14,7 +14,7 @@ import { useActualizarPago, usePago } from '../../hooks/usePagos';
 import { useAlumnos } from '../../hooks/useAlumnos';
 
 const schema = z.object({
-  id_alumno: z.string().min(1, 'Alumno requerido'),
+  id_alumno: z.string().min(1, 'Estudiante requerido'),
   monto: z.number().min(0, 'Monto requerido'),
   fecha_pago: z.date().or(z.string()),
   metodo_pago: z.string().min(1, 'Método de pago requerido'),
@@ -57,7 +57,7 @@ export default function PagoEditarPage() {
 
   const alumnos = normalizeAlumnosResponse(alumnosData).map((a) => ({
     value: String(a.id),
-    label: [a.nombre, a.segundo_nombre, a.apellido, a.segundo_apellido].filter(Boolean).join(' ') || a.email || `Alumno ${a.id}`,
+    label: a.nombre || a.email || `Estudiante ${a.id}`,
   }));
 
   const onSubmit = async (values) => {
@@ -76,7 +76,7 @@ export default function PagoEditarPage() {
         <Card watermark>
           <div className="grid gap-4 md:grid-cols-2">
             <Select
-              label="Alumno"
+              label="Estudiante"
               options={alumnos}
               value={watch('id_alumno')}
               onChange={(value) => setValue('id_alumno', value)}

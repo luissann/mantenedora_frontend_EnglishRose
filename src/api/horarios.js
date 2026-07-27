@@ -5,6 +5,16 @@ export async function getHorarios(params = {}) {
   return data;
 }
 
+export async function getHorariosPorAlumno(idAlumno) {
+  const { data } = await client.get(`/horarios/alumno/${idAlumno}`);
+  return data;
+}
+
+export async function getHorariosPorPrograma(idAlumnoPrograma) {
+  const { data } = await client.get(`/horarios/programa/${idAlumnoPrograma}`);
+  return data;
+}
+
 export async function getHorario(id) {
   const { data } = await client.get(`/horarios/${id}`);
   return data;

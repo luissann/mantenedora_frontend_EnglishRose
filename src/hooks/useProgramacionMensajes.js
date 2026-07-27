@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getProgramacionMensajes, getProgramacionMensaje, crearProgramacionMensaje, actualizarProgramacionMensaje, eliminarProgramacionMensaje, getNotificaciones, enviarWhatsappAhora, getCalendarioMensual } from '../api/programacionMensajes';
+import { getProgramacionMensajes, getProgramacionMensaje, crearProgramacionMensaje, actualizarProgramacionMensaje, eliminarProgramacionMensaje, getNotificaciones, getCalendarioMensual } from '../api/programacionMensajes';
 
 export function useCalendarioMensual(anio, mes) {
   return useQuery({
@@ -39,6 +39,8 @@ export function useCrearProgramacionMensaje() {
     mutationFn: crearProgramacionMensaje,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       toast.success('Programación de mensajes creada');
     },
     onError: (error) => {
@@ -54,24 +56,12 @@ export function useActualizarProgramacionMensaje() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
       queryClient.invalidateQueries({ queryKey: ['programacion-mensaje'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       toast.success('Programación actualizada');
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Error al actualizar programación');
-    },
-  });
-}
-
-export function useEnviarWhatsappAhora() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: enviarWhatsappAhora,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
-      queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al enviar el mensaje de WhatsApp');
     },
   });
 }
@@ -82,6 +72,8 @@ export function useEliminarProgramacionMensaje() {
     mutationFn: eliminarProgramacionMensaje,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
+      queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       toast.success('Programación eliminada');
     },
     onError: (error) => {

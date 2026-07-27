@@ -49,7 +49,7 @@ export default function HorariosIndexPage() {
       label: (
         <SortableHeader
           column="alumno_nombre"
-          label="Alumno"
+          label="Estudiante"
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
@@ -99,6 +99,11 @@ export default function HorariosIndexPage() {
         />
       ),
       render: (row) => formatTime(row.hora_fin),
+    },
+    {
+      key: 'detalle',
+      label: 'Detalle',
+      render: (row) => row.detalle || '—',
     },
     {
       key: 'actions',

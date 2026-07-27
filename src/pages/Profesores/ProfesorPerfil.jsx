@@ -101,7 +101,7 @@ export default function ProfesorPerfilPage() {
               horarios.map((h) => (
                 <div key={h.id} className="flex items-center justify-between gap-2 rounded-2xl border border-border-input px-3 py-2.5">
                   <span className="text-text-primary">
-                    {[h.alumno?.nombre, h.alumno?.apellido].filter(Boolean).join(' ') || 'Alumno'}
+                    {[h.alumno?.nombre, h.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante'}
                   </span>
                   <span className="text-text-secondary">
                     {DIA_LABEL[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)} - {formatTime(h.hora_fin)}

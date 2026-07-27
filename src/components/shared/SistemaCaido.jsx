@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { WifiOff } from 'lucide-react';
 import useSystemStatusStore from '../../store/systemStatusStore';
+import { apiBaseURL } from '../../api/client';
 
 const REINTENTO_MS = 15_000;
 
 // El health check vive en la raíz del backend (no bajo /api), así que se
-// arma la URL a partir del mismo host que usa el cliente de axios.
-const API_BASE  = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const HEALTH_URL = `${API_BASE.replace(/\/api\/?$/, '')}/health`;
+// arma la URL a partir del mismo host que usa el cliente de axios (ver
+// client.js — misma detección de origen, un solo lugar de verdad).
+const HEALTH_URL = `${apiBaseURL.replace(/\/api\/?$/, '')}/health`;
 
 export function SistemaCaido() {
   const backendCaido = useSystemStatusStore((state) => state.backendCaido);

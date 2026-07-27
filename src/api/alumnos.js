@@ -20,6 +20,15 @@ export async function crearAlumno(payload) {
   return data;
 }
 
+// Crea el alumno junto con sus programas y horarios en una sola llamada
+// atómica (el backend lo hace todo dentro de una transacción): si algo
+// falla (frecuencia excedida, horario duplicado, 4to programa activo, etc.)
+// no queda un alumno a medio crear.
+export async function crearAlumnoCompleto(payload) {
+  const { data } = await client.post('/alumnos/completo', payload);
+  return data;
+}
+
 export async function actualizarAlumno(id, payload) {
   const { data } = await client.put(`/alumnos/${id}`, payload);
   return data;
