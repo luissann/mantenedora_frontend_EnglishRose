@@ -4,7 +4,7 @@ import { Button } from '../ui/Button';
 import { useWhatsappEstado, useReiniciarWhatsapp } from '../../hooks/useWhatsapp';
 
 export function WhatsappModal({ isOpen, onClose }) {
-  const { data: waData, isLoading: cargandoWA } = useWhatsappEstado(isOpen);
+  const { data: waData, isLoading: cargandoWA } = useWhatsappEstado(isOpen, true);
   const waEstado = waData?.data;
   const reiniciarMutation = useReiniciarWhatsapp();
 

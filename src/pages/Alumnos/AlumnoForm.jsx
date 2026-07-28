@@ -14,8 +14,18 @@ import { DIAS_DISPLAY } from '../../utils/constants';
 
 const MAX_PROGRAMAS = 3;
 
+// Todas las clases duran 1 hora — hora_fin nunca se le pide al usuario,
+// se calcula sola a partir de hora_inicio.
+function sumarUnaHora(horaInicio) {
+  if (!horaInicio) return '';
+  const [h, m] = horaInicio.split(':').map(Number);
+  const fin = new Date(0, 0, 0, h, m);
+  fin.setHours(fin.getHours() + 1);
+  return `${String(fin.getHours()).padStart(2, '0')}:${String(fin.getMinutes()).padStart(2, '0')}`;
+}
+
 function nuevoHorario() {
-  return { dia_semana: 'LUNES', hora_inicio: '09:00', hora_fin: '', detalle: '' };
+  return { dia_semana: 'LUNES', hora_inicio: '09:00', hora_fin: sumarUnaHora('09:00'), detalle: '' };
 }
 
 function nuevoPrograma() {
@@ -53,7 +63,6 @@ function HorariosDelPrograma({ control, register, watch, setValue, indexPrograma
               <tr>
                 <th className="px-3 py-2">Día</th>
                 <th className="px-3 py-2">Hora de inicio</th>
-                <th className="px-3 py-2">Hora de término</th>
                 <th className="px-3 py-2">Detalle</th>
                 <th className="px-3 py-2">Acciones</th>
               </tr>
@@ -85,13 +94,19 @@ function HorariosDelPrograma({ control, register, watch, setValue, indexPrograma
                     <input
                       type="time"
                       {...register(`programas.${indexPrograma}.horarios.${indexHorario}.hora_inicio`)}
-                      className="rounded-xl border border-border-input bg-white px-2 py-1.5 text-sm outline-none focus:border-rose"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="time"
-                      {...register(`programas.${indexPrograma}.horarios.${indexHorario}.hora_fin`)}
+                      onChange={(e) => {
+                        const horaInicio = e.target.value;
+                        setValue(
+                          `programas.${indexPrograma}.horarios.${indexHorario}.hora_inicio`,
+                          horaInicio,
+                          { shouldValidate: true, shouldDirty: true }
+                        );
+                        setValue(
+                          `programas.${indexPrograma}.horarios.${indexHorario}.hora_fin`,
+                          sumarUnaHora(horaInicio),
+                          { shouldValidate: true, shouldDirty: true }
+                        );
+                      }}
                       className="rounded-xl border border-border-input bg-white px-2 py-1.5 text-sm outline-none focus:border-rose"
                     />
                   </td>

@@ -10,7 +10,7 @@ export default function PerfilPage() {
   const usuario = useAuthStore((state) => state.usuario);
   const [mostrarQR, setMostrarQR] = useState(false);
 
-  const { data: waData, isLoading: cargandoWA } = useWhatsappEstado(mostrarQR);
+  const { data: waData, isLoading: cargandoWA } = useWhatsappEstado(mostrarQR, true);
   const waEstado = waData?.data;
 
   const reiniciarMutation = useReiniciarWhatsapp();

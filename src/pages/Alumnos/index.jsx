@@ -122,6 +122,7 @@ function EnvioMasivoButton() {
   const [modalOpen, setModalOpen] = useState(false);
   const [diaSemana, setDiaSemana] = useState('DOMINGO');
   const [hora, setHora] = useState('20:00');
+  const [destinatarios, setDestinatarios] = useState('ACTIVOS');
 
   const config = configData?.data;
   const activo = !!config?.envio_masivo_activo;
@@ -130,21 +131,29 @@ function EnvioMasivoButton() {
     if (!config) return;
     setDiaSemana(config.envio_masivo_dia_semana || 'DOMINGO');
     setHora((config.envio_masivo_hora || '20:00:00').slice(0, 5));
+    setDestinatarios(config.envio_masivo_destinatarios || 'ACTIVOS');
   }, [config]);
 
-  // El switch usa siempre el día/hora ya guardado (o el default si nunca se
-  // configuró); para cambiar día/hora está el modal, que además activa.
+  // El switch usa siempre el día/hora/destinatarios ya guardado (o el
+  // default si nunca se configuró); para cambiarlos está el modal, que
+  // además activa.
   const alternar = (nuevoActivo) => {
     actualizarMutation.mutate({
-      envio_masivo_activo:     nuevoActivo,
-      envio_masivo_dia_semana: config?.envio_masivo_dia_semana || diaSemana,
-      envio_masivo_hora:       (config?.envio_masivo_hora || hora).slice(0, 5),
+      envio_masivo_activo:        nuevoActivo,
+      envio_masivo_dia_semana:    config?.envio_masivo_dia_semana || diaSemana,
+      envio_masivo_hora:          (config?.envio_masivo_hora || hora).slice(0, 5),
+      envio_masivo_destinatarios: config?.envio_masivo_destinatarios || destinatarios,
     });
   };
 
   const guardarYActivar = () => {
     actualizarMutation.mutate(
-      { envio_masivo_activo: true, envio_masivo_dia_semana: diaSemana, envio_masivo_hora: hora },
+      {
+        envio_masivo_activo:        true,
+        envio_masivo_dia_semana:    diaSemana,
+        envio_masivo_hora:          hora,
+        envio_masivo_destinatarios: destinatarios,
+      },
       { onSuccess: () => setModalOpen(false) }
     );
   };
@@ -187,6 +196,18 @@ function EnvioMasivoButton() {
               value={hora}
               onChange={(e) => setHora(e.target.value)}
               className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-text-secondary">Enviar a</label>
+            <Select
+              options={[
+                { value: 'ACTIVOS', label: 'Solo estudiantes activos' },
+                { value: 'INACTIVOS', label: 'Solo estudiantes inactivos' },
+                { value: 'TODOS', label: 'Todos (activos e inactivos)' },
+              ]}
+              value={destinatarios}
+              onChange={setDestinatarios}
             />
           </div>
           <div className="flex justify-end">
