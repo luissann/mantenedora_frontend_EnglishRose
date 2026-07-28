@@ -252,9 +252,23 @@ export default function AlumnosPage() {
       if (row.estado_envio !== 'PENDIENTE') continue;
       const key = String(row.id_alumno);
       const actual = mapa.get(key);
-      const clave = `${row.fecha_envio}${row.hora_envio}`;
-      const claveActual = actual ? `${actual.fecha_envio}${actual.hora_envio}` : null;
-      if (!actual || clave < claveActual) {
+      if (!actual) {
+        mapa.set(key, row);
+        continue;
+      }
+      // Preferir una fila activa por sobre una pausada aunque tenga fecha
+      // más antigua (solo la activa es la que realmente se va a enviar).
+      if (actual.activo !== row.activo) {
+        if (row.activo) mapa.set(key, row);
+        continue;
+      }
+      if (row.activo) {
+        const clave = `${row.fecha_envio}${row.hora_envio}`;
+        const claveActual = `${actual.fecha_envio}${actual.hora_envio}`;
+        if (clave < claveActual) mapa.set(key, row);
+      } else if (new Date(row.updated_at || 0) > new Date(actual.updated_at || 0)) {
+        // Entre varias pausadas (debris viejo), la más reciente en tocarse
+        // gana en vez de la de fecha más antigua.
         mapa.set(key, row);
       }
     }

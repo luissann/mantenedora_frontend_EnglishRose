@@ -41,6 +41,7 @@ export function useCrearProgramacionMensaje() {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
       queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
       queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
       toast.success('Programación de mensajes creada');
     },
     onError: (error) => {
@@ -58,6 +59,7 @@ export function useActualizarProgramacionMensaje() {
       queryClient.invalidateQueries({ queryKey: ['programacion-mensaje'] });
       queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
       queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
       toast.success('Programación actualizada');
     },
     onError: (error) => {

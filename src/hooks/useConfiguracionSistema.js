@@ -21,6 +21,11 @@ export function useActualizarConfiguracionSistema() {
       // un refetch por otra vía.
       queryClient.invalidateQueries({ queryKey: ['programacion-mensajes'] });
       queryClient.invalidateQueries({ queryKey: ['programacion-calendario'] });
+      // También reagenda la fila de ProgramacionMensaje de cada alumno — sin
+      // esto, la ficha de un alumno (useAlumnoCompleto) podía seguir
+      // mostrando la fecha individual vieja si ya estaba en caché.
+      queryClient.invalidateQueries({ queryKey: ['alumnoCompleto'] });
+      queryClient.invalidateQueries({ queryKey: ['alumno'] });
       toast.success('Configuración actualizada');
     },
     onError: (error) => {

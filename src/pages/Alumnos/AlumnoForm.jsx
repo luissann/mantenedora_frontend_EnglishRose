@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useFieldArray } from 'react-hook-form';
+import { parseISO } from 'date-fns';
 import { Users, GraduationCap, Trash2, Plus, MessageCircle } from 'lucide-react';
 import { FormErrorSummary } from '../../components/shared/FormErrorSummary';
 import { DiaSemanaCalendarPicker } from '../../components/shared/DiaSemanaCalendarPicker';
@@ -11,6 +13,7 @@ import { Button } from '../../components/ui/Button';
 import { useProgramas } from '../../hooks/useProgramas';
 import { useProfesores } from '../../hooks/useProfesores';
 import { DIAS_DISPLAY } from '../../utils/constants';
+import { formatDate, formatTime } from '../../utils/formatters';
 
 const MAX_PROGRAMAS = 3;
 
@@ -155,7 +158,81 @@ function HorariosDelPrograma({ control, register, watch, setValue, indexPrograma
   );
 }
 
-export function AlumnoForm({ control, register, watch, setValue, errors, onSubmit, onCancel, submitting, submitLabel }) {
+// Editar el envío individual de un alumno ya existente actúa directamente
+// sobre la programación REAL (misma fila que ve/edita el envío masivo y el
+// listado de Estudiantes) en vez de sobre una "preferencia" (dia_envio_mensaje/
+// hora_envio_mensaje) separada que antes no tenía ningún efecto mientras el
+// envío masivo estaba activo — de ahí la confusión de "edité la fecha y no
+// cambió nada". Se guarda al tiro (no espera al submit del formulario
+// completo), igual que el switch/reprogramar del listado.
+function ProgramacionRealCard({ proximaProgramacion, onGuardar, onTogglePausado, guardando }) {
+  const [fechaEnvio, setFechaEnvio] = useState(
+    proximaProgramacion ? parseISO(proximaProgramacion.fecha_envio) : new Date()
+  );
+  const [horaEnvio, setHoraEnvio] = useState(proximaProgramacion?.hora_envio?.slice(0, 5) || '09:00');
+
+  // Si la programación real cambia por fuera (guardado propio, o el envío
+  // masivo la reagenda mientras esta pantalla sigue abierta), sincronizar
+  // los inputs para no mostrar un valor viejo.
+  useEffect(() => {
+    setFechaEnvio(proximaProgramacion ? parseISO(proximaProgramacion.fecha_envio) : new Date());
+    setHoraEnvio(proximaProgramacion?.hora_envio?.slice(0, 5) || '09:00');
+  }, [proximaProgramacion?.id, proximaProgramacion?.fecha_envio, proximaProgramacion?.hora_envio]);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-text-secondary">
+        Esta es la fecha/hora real que se le va a enviar a este alumno — la misma que
+        controla el envío masivo. Si el envío masivo está activo y solo quieres una
+        excepción puntual para este alumno, cámbiala aquí; si no, la próxima corrida
+        del masivo la va a volver a poner en la fecha general.
+      </p>
+      <div className="grid gap-4 md:grid-cols-2">
+        <DatePicker label="Fecha de Envío" value={fechaEnvio} onChange={setFechaEnvio} minDate={new Date()} />
+        <div>
+          <label className="text-sm text-text-secondary">Hora de Envío</label>
+          <input
+            type="time"
+            value={horaEnvio}
+            onChange={(e) => setHoraEnvio(e.target.value)}
+            className="mt-2 w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
+          />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        {proximaProgramacion && (
+          <Toggle
+            value={!!proximaProgramacion.activo}
+            trueLabel="Enviar"
+            falseLabel="Pausado"
+            onChange={onTogglePausado}
+          />
+        )}
+        <Button type="button" variant="secondary" loading={guardando} onClick={() => onGuardar(fechaEnvio, horaEnvio)}>
+          {proximaProgramacion ? 'Guardar horario' : 'Programar envío'}
+        </Button>
+      </div>
+      {proximaProgramacion ? (
+        <p className="text-xs text-text-secondary">
+          Próximo envío programado: {formatDate(proximaProgramacion.fecha_envio)} {formatTime(proximaProgramacion.hora_envio)}
+          {!proximaProgramacion.activo && ' (pausado)'}
+        </p>
+      ) : (
+        <p className="text-xs text-text-secondary">Aún no hay ningún envío programado para este alumno.</p>
+      )}
+    </div>
+  );
+}
+
+export function AlumnoForm({
+  control, register, watch, setValue, errors, onSubmit, onCancel, submitting, submitLabel,
+  proximaProgramacion, onGuardarProgramacion, onTogglePausadoProgramacion, guardandoProgramacion,
+}) {
+  // Presencia del prop (aunque sea null) indica "modo edición": ya existe un
+  // alumno real detrás y hay que trabajar contra su programación real, no
+  // contra la preferencia dia_envio_mensaje/hora_envio_mensaje que solo tiene
+  // sentido al crear (todavía no existe ninguna fila que editar).
+  const esEdicion = proximaProgramacion !== undefined;
   const { fields: programasFields, append: appendPrograma, remove: removePrograma } = useFieldArray({
     control,
     name: 'programas',
@@ -319,23 +396,34 @@ export function AlumnoForm({ control, register, watch, setValue, errors, onSubmi
           </span>
           <h3 className="text-lg font-semibold">Envío del Mensaje</h3>
         </div>
-        <p className="mb-4 text-sm text-text-secondary">
-          Un solo mensaje semanal, con el resumen de todos los programas y horarios del alumno. Elige el día y la hora en que se enviará.
-        </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <DiaSemanaCalendarPicker
-            label="Día de Envío"
-            diaSemana={watch('dia_envio_mensaje')}
-            onChange={(dia) => setValue('dia_envio_mensaje', dia, { shouldValidate: true, shouldDirty: true })}
-            error={errors.dia_envio_mensaje?.message}
+        {esEdicion ? (
+          <ProgramacionRealCard
+            proximaProgramacion={proximaProgramacion}
+            onGuardar={onGuardarProgramacion}
+            onTogglePausado={onTogglePausadoProgramacion}
+            guardando={guardandoProgramacion}
           />
-          <Input
-            label="Hora de Envío"
-            type="time"
-            {...register('hora_envio_mensaje')}
-            error={errors.hora_envio_mensaje?.message}
-          />
-        </div>
+        ) : (
+          <>
+            <p className="mb-4 text-sm text-text-secondary">
+              Un solo mensaje semanal, con el resumen de todos los programas y horarios del alumno. Elige el día y la hora en que se enviará.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <DiaSemanaCalendarPicker
+                label="Día de Envío"
+                diaSemana={watch('dia_envio_mensaje')}
+                onChange={(dia) => setValue('dia_envio_mensaje', dia, { shouldValidate: true, shouldDirty: true })}
+                error={errors.dia_envio_mensaje?.message}
+              />
+              <Input
+                label="Hora de Envío"
+                type="time"
+                {...register('hora_envio_mensaje')}
+                error={errors.hora_envio_mensaje?.message}
+              />
+            </div>
+          </>
+        )}
       </Card>
 
       <Card watermark={false}>

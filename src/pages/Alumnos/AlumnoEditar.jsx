@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { parseISO } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -10,6 +10,10 @@ import { PageHeader } from '../../components/shared/PageHeader';
 import { Spinner } from '../../components/ui/Spinner';
 import { actualizarAlumno } from '../../api/alumnos';
 import { useAlumnoCompleto } from '../../hooks/useAlumnos';
+import {
+  useCrearProgramacionMensaje,
+  useActualizarProgramacionMensaje,
+} from '../../hooks/useProgramacionMensajes';
 import { sincronizarProgramasYHorarios } from '../../utils/alumnoProgramaSync';
 import { AlumnoForm } from './AlumnoForm';
 
@@ -48,8 +52,6 @@ const schema = z.object({
   activo: z.boolean(),
   fecha_ingreso: z.date().or(z.string()),
   observaciones: z.string().optional(),
-  dia_envio_mensaje: z.string().optional(),
-  hora_envio_mensaje: z.string().optional(),
   programas: z.array(programaSchema).max(3, 'Máximo 3 programas por estudiante'),
 });
 
@@ -61,6 +63,46 @@ export default function AlumnoEditarPage() {
   const { data: alumnoRes, isLoading } = useAlumnoCompleto(id);
   const alumno = alumnoRes?.data;
   const programasOriginalRef = useRef([]);
+
+  const crearProgramacionMutation = useCrearProgramacionMensaje();
+  const actualizarProgramacionMutation = useActualizarProgramacionMensaje();
+
+  // La programación real (misma tabla que usa el envío masivo y el listado
+  // de Estudiantes): la más próxima pendiente, activa o pausada, para
+  // mostrarla/editarla directamente — ver ProgramacionRealCard en AlumnoForm.
+  const proximaProgramacion = useMemo(() => {
+    if (!alumno) return undefined;
+    // Preferir SIEMPRE una fila activa por sobre una pausada, aunque la
+    // pausada tenga una fecha más antigua: solo la activa es la que
+    // realmente se va a enviar y la que el envío masivo mantiene al día. Sin
+    // esto, filas pausadas viejas (de pruebas o de un pausado anterior)
+    // podían mostrarse como si fueran "la próxima" en vez de la real.
+    const pendientes = (alumno.programaciones || [])
+      .filter((p) => p.estado_envio === 'PENDIENTE')
+      .sort((a, b) => {
+        if (a.activo !== b.activo) return a.activo ? -1 : 1;
+        // Entre varias activas (no debería pasar) o varias pausadas
+        // (debris viejo), la más reciente en tocarse es la que manda —
+        // ordenar por fecha_envio entre pausadas puede mostrar una vieja
+        // "de museo" en vez de la última real.
+        return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
+      });
+    return pendientes[0] || null;
+  }, [alumno]);
+
+  const guardarProgramacion = (fechaEnvio, horaEnvio) => {
+    const fecha = fechaEnvio instanceof Date ? fechaEnvio.toISOString().split('T')[0] : fechaEnvio;
+    if (proximaProgramacion) {
+      actualizarProgramacionMutation.mutate({ id: proximaProgramacion.id, fecha_envio: fecha, hora_envio: horaEnvio, activo: true });
+    } else {
+      crearProgramacionMutation.mutate({ id_alumno: id, fecha_envio: fecha, hora_envio: horaEnvio, activo: true });
+    }
+  };
+
+  const togglePausadoProgramacion = (activo) => {
+    if (!proximaProgramacion) return;
+    actualizarProgramacionMutation.mutate({ id: proximaProgramacion.id, activo });
+  };
 
   const {
     register,
@@ -92,8 +134,6 @@ export default function AlumnoEditarPage() {
       activo: Boolean(alumno.activo),
       fecha_ingreso: alumno.fecha_ingreso ? parseISO(alumno.fecha_ingreso) : new Date(),
       observaciones: alumno.observaciones ?? '',
-      dia_envio_mensaje: alumno.dia_envio_mensaje ?? 'LUNES',
-      hora_envio_mensaje: alumno.hora_envio_mensaje ? alumno.hora_envio_mensaje.slice(0, 5) : '09:00',
       programas: (alumno.programas || []).map((ap) => ({
         id: ap.id,
         id_programa: ap.id_programa ? String(ap.id_programa) : (ap.programa?.id ? String(ap.programa.id) : ''),
@@ -136,8 +176,6 @@ export default function AlumnoEditarPage() {
         activo: !!values.activo,
         fecha_ingreso: fechaFormateada,
         observaciones: values.observaciones || null,
-        dia_envio_mensaje: values.dia_envio_mensaje || null,
-        hora_envio_mensaje: values.hora_envio_mensaje || '09:00',
       });
 
       await sincronizarProgramasYHorarios(id, values.programas || [], programasOriginalRef.current);
@@ -165,6 +203,10 @@ export default function AlumnoEditarPage() {
         onCancel={() => navigate(`/alumnos/${id}`)}
         submitting={isSubmitting}
         submitLabel="Guardar Cambios"
+        proximaProgramacion={proximaProgramacion}
+        onGuardarProgramacion={guardarProgramacion}
+        onTogglePausadoProgramacion={togglePausadoProgramacion}
+        guardandoProgramacion={crearProgramacionMutation.isPending || actualizarProgramacionMutation.isPending}
       />
     </div>
   );
