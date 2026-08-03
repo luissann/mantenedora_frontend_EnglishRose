@@ -47,6 +47,7 @@ const programaSchema = z
 const schema = z.object({
   nombre: z.string().min(1),
   alias: z.string().optional(),
+  usar_alias_mensaje: z.boolean().optional(),
   telefono: z.string().min(1),
   email: z.string().email('Correo inválido').optional().or(z.literal('')),
   activo: z.boolean(),
@@ -129,6 +130,7 @@ export default function AlumnoEditarPage() {
     reset({
       nombre: alumno.nombre ?? '',
       alias: alumno.alias ?? '',
+      usar_alias_mensaje: alumno.usar_alias_mensaje !== false,
       telefono: alumno.telefono ?? '',
       email: alumno.email ?? '',
       activo: Boolean(alumno.activo),
@@ -171,6 +173,7 @@ export default function AlumnoEditarPage() {
       await actualizarAlumno(id, {
         nombre: values.nombre,
         alias: values.alias || null,
+        usar_alias_mensaje: values.usar_alias_mensaje !== false,
         telefono: values.telefono,
         email: values.email || null,
         activo: !!values.activo,

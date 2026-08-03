@@ -38,6 +38,7 @@ const programaSchema = z
 const schema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
   alias: z.string().optional(),
+  usar_alias_mensaje: z.boolean().optional(),
   telefono: z.string().min(1, 'Teléfono requerido'),
   email: z.string().email('Correo inválido').optional().or(z.literal('')),
   activo: z.boolean(),
@@ -64,6 +65,7 @@ export default function AlumnoNuevoPage() {
     defaultValues: {
       nombre: '',
       alias: '',
+      usar_alias_mensaje: true,
       telefono: '',
       email: '',
       activo: true,
@@ -85,6 +87,7 @@ export default function AlumnoNuevoPage() {
       const res = await crearAlumnoCompleto({
         nombre: values.nombre,
         alias: values.alias || null,
+        usar_alias_mensaje: values.usar_alias_mensaje !== false,
         telefono: values.telefono,
         email: values.email || null,
         activo: !!values.activo,

@@ -247,8 +247,9 @@ export function AlumnoForm({
   const programasWatch = watch('programas') || [];
   const alias = watch('alias');
   const nombre = watch('nombre');
+  const usarAliasMensaje = watch('usar_alias_mensaje');
 
-  const nombrePreview = alias?.trim() || nombre?.trim() || 'Estudiante';
+  const nombrePreview = usarAliasMensaje === false ? '' : (alias?.trim() || nombre?.trim() || 'Estudiante');
 
   const ordenDiasPreview = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
   const lineasPreview = programasWatch
@@ -396,6 +397,15 @@ export function AlumnoForm({
           </span>
           <h3 className="text-lg font-semibold">Envío del Mensaje</h3>
         </div>
+        <div className="mb-6">
+          <Toggle
+            label='Usar "Alias" en el saludo del mensaje'
+            value={watch('usar_alias_mensaje')}
+            onChange={(value) => setValue('usar_alias_mensaje', value)}
+            trueLabel="Usar"
+            falseLabel="No usar"
+          />
+        </div>
         {esEdicion ? (
           <ProgramacionRealCard
             proximaProgramacion={proximaProgramacion}
@@ -435,7 +445,7 @@ export function AlumnoForm({
         </div>
         <div className="rounded-3xl border border-border bg-[#DCF8C6] p-5 text-text-primary">
           <div className="whitespace-pre-line rounded-2xl bg-white p-4 text-sm leading-6 text-text-secondary">
-            {`Holaaa ${nombrePreview}! ¿Confirmamos? 🥰\n\n${lineasPreview || 'Aún no hay horarios cargados.'}`}
+            {`Hola${nombrePreview ? ` ${nombrePreview}` : ''}! Confirmamos? 🥰\n\n${lineasPreview || 'Aún no hay horarios cargados.'}`}
           </div>
         </div>
         <p className="mt-3 text-xs text-text-secondary">
