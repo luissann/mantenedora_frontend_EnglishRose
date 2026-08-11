@@ -58,6 +58,7 @@ export function CalendarioMensajes() {
   }, [mesActual]);
 
   const registrosDelDiaSeleccionado = diaSeleccionado ? (registrosPorDia[diaSeleccionado] || []) : [];
+  const [expandidoId, setExpandidoId] = useState(null);
 
   return (
     <Card watermark>
@@ -144,21 +145,32 @@ export function CalendarioMensajes() {
         {registrosDelDiaSeleccionado.length === 0 ? (
           <EmptyState title="Sin mensajes programados ese día" />
         ) : (
-          <div className="space-y-2">
-            {registrosDelDiaSeleccionado.map((registro) => (
-              <div
-                key={registro.id}
-                className="flex items-center justify-between rounded-2xl border border-border px-3 py-2 text-sm"
-              >
-                <span className="truncate">
-                  {[registro.alumno?.nombre, registro.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante'}
-                </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-text-secondary">
-                  <span className={`h-2 w-2 rounded-full ${ESTADO_DOT[registro.estado_envio]}`} />
-                  {ESTADO_LABEL[registro.estado_envio]}
-                </span>
-              </div>
-            ))}
+          <div className="max-h-[70vh] space-y-2 overflow-y-auto">
+            {registrosDelDiaSeleccionado.map((registro) => {
+              const abierto = expandidoId === registro.id;
+              return (
+                <div key={registro.id} className="rounded-2xl border border-border px-3 py-2 text-sm">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-2 text-left"
+                    onClick={() => setExpandidoId(abierto ? null : registro.id)}
+                  >
+                    <span className="truncate">
+                      {[registro.alumno?.nombre, registro.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante'}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5 text-text-secondary">
+                      <span className={`h-2 w-2 rounded-full ${ESTADO_DOT[registro.estado_envio]}`} />
+                      {ESTADO_LABEL[registro.estado_envio]}
+                    </span>
+                  </button>
+                  {abierto && (
+                    <div className="mt-2 whitespace-pre-line rounded-xl bg-rose-light/40 p-2 text-xs text-text-secondary">
+                      {registro.mensaje_preview || 'Sin horario cargado — el mensaje saldrá sin el bloque de horario.'}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </Modal>

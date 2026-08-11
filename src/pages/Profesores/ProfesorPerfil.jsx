@@ -8,6 +8,7 @@ import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { useProfesor, useEliminarProfesor } from '../../hooks/useProfesores';
 import { useHorarios } from '../../hooks/useHorarios';
 import { formatCLP, formatTime } from '../../utils/formatters';
+import { urlFoto } from '../../utils/assets';
 
 const DIA_LABEL = {
   LUNES: 'Lunes',
@@ -47,7 +48,13 @@ export default function ProfesorPerfilPage() {
       <Card relative watermark>
         <div className="grid gap-6 md:grid-cols-3">
           <div>
-            <div className="mb-4 h-48 w-48 rounded-2xl bg-slate-200" />
+            {urlFoto(profesor.foto_url) ? (
+              <img src={urlFoto(profesor.foto_url)} alt={nombreCompleto} className="mb-4 h-48 w-48 rounded-2xl object-cover" />
+            ) : (
+              <div className="mb-4 flex h-48 w-48 items-center justify-center rounded-2xl bg-slate-200 text-3xl font-semibold text-slate-500">
+                {profesor.nombre?.[0]}{profesor.apellido?.[0]}
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">

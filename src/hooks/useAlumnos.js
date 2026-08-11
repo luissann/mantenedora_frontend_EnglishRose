@@ -2,10 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getAlumnos, getAlumno, getAlumnoCompleto, crearAlumno, actualizarAlumno, eliminarAlumno } from '../api/alumnos';
 
-export function useAlumnos(filters = {}) {
+export function useAlumnos(filters = {}, options = {}) {
   return useQuery({
     queryKey: ['alumnos', filters],
     queryFn: () => getAlumnos(filters),
+    ...options,
   });
 }
 

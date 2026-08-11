@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useProfesores, useEliminarProfesor } from '../../hooks/useProfesores';
 import { formatCLP } from '../../utils/formatters';
+import { urlFoto } from '../../utils/assets';
 
 export default function ProfesoresIndexPage() {
   const navigate = useNavigate();
@@ -26,6 +27,19 @@ export default function ProfesoresIndexPage() {
   const pagination = profesoresData?.pagination || {};
 
   const columns = [
+    {
+      key: 'foto',
+      label: '',
+      render: (row) => (
+        urlFoto(row.foto_url) ? (
+          <img src={urlFoto(row.foto_url)} alt={row.nombre} className="h-9 w-9 rounded-full object-cover" />
+        ) : (
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-light text-xs font-semibold text-rose">
+            {row.nombre?.[0]}{row.apellido?.[0]}
+          </span>
+        )
+      ),
+    },
     { key: 'nombre_completo', label: 'Nombre', render: (row) => `${row.nombre} ${row.apellido}` },
     { key: 'titulo', label: 'Título', render: (row) => row.titulo || '-' },
     { key: 'tarifa_hora_clp', label: 'Tarifa/hora', render: (row) => formatCLP(row.tarifa_hora_clp) },

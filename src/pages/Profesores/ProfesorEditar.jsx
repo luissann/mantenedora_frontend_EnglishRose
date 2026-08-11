@@ -9,7 +9,8 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
-import { useActualizarProfesor, useProfesor } from '../../hooks/useProfesores';
+import { useActualizarProfesor, useProfesor, useSubirFotoProfesor } from '../../hooks/useProfesores';
+import { urlFoto } from '../../utils/assets';
 
 const schema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
@@ -26,6 +27,12 @@ export default function ProfesorEditarPage() {
   const navigate = useNavigate();
   const { data: profesorData, isLoading } = useProfesor(id);
   const updateMutation = useActualizarProfesor();
+  const subirFotoMutation = useSubirFotoProfesor();
+
+  const onFotoChange = (e) => {
+    const archivo = e.target.files?.[0];
+    if (archivo) subirFotoMutation.mutate({ id, archivo });
+  };
 
   const {
     register,
@@ -80,6 +87,19 @@ export default function ProfesorEditarPage() {
         <FormErrorSummary errors={errors} />
         <Card watermark>
           <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              {urlFoto(profesorData?.data?.foto_url) ? (
+                <img src={urlFoto(profesorData.data.foto_url)} alt="Foto" className="h-16 w-16 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-light text-sm font-semibold text-rose">
+                  Foto
+                </span>
+              )}
+              <div>
+                <label className="text-sm text-text-secondary">Cambiar foto</label>
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onFotoChange} className="mt-1 block text-sm" />
+              </div>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Input label="Nombre" {...register('nombre')} error={errors.nombre?.message} />
               <Input label="Apellido" {...register('apellido')} error={errors.apellido?.message} />

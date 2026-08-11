@@ -24,3 +24,12 @@ export async function eliminarProfesor(id) {
   const { data } = await client.delete(`/profesores/${id}`);
   return data;
 }
+
+export async function subirFotoProfesor(id, archivo) {
+  const formData = new FormData();
+  formData.append('foto', archivo);
+  const { data } = await client.post(`/profesores/${id}/foto`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}

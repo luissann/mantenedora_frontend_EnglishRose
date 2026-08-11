@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getProfesores, getProfesor, crearProfesor, actualizarProfesor, eliminarProfesor } from '../api/profesores';
+import { getProfesores, getProfesor, crearProfesor, actualizarProfesor, eliminarProfesor, subirFotoProfesor } from '../api/profesores';
 
 export function useProfesores(filters = {}) {
   return useQuery({
@@ -42,6 +42,21 @@ export function useActualizarProfesor() {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Error al actualizar profesor');
+    },
+  });
+}
+
+export function useSubirFotoProfesor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, archivo }) => subirFotoProfesor(id, archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profesores'] });
+      queryClient.invalidateQueries({ queryKey: ['profesor'] });
+      toast.success('Foto actualizada');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Error al subir la foto');
     },
   });
 }

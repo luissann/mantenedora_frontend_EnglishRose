@@ -278,7 +278,12 @@ export function AlumnoForm({
             <Input label="Alias" placeholder="Ej: Majo (opcional, se usa en el saludo de WhatsApp)" {...register('alias')} error={errors.alias?.message} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Teléfono" placeholder="+56 9 1234 5678" {...register('telefono')} error={errors.telefono?.message} />
+            <div>
+              <Input label="Teléfono" placeholder="+56 9 1234 5678" {...register('telefono')} error={errors.telefono?.message} />
+              <p className="mt-1 text-xs text-text-secondary">
+                Si el alumno es de otro país, escribe el número completo con "+" y código de país (ej: +57 300 123 4567) o no le llegará el mensaje de WhatsApp.
+              </p>
+            </div>
             <Input label="Correo Electrónico" type="email" placeholder="correo@ejemplo.com" {...register('email')} error={errors.email?.message} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">

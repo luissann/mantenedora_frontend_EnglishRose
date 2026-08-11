@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Edit, Trash2, Plus, Send } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus, Send, Pin, PinOff } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -13,8 +13,9 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { DiaSemanaCalendarPicker } from '../../components/shared/DiaSemanaCalendarPicker';
 import { Spinner } from '../../components/ui/Spinner';
-import { useAlumnos, useEliminarAlumno } from '../../hooks/useAlumnos';
+import { useAlumnos, useEliminarAlumno, useActualizarAlumno } from '../../hooks/useAlumnos';
 import { useProgramas } from '../../hooks/useProgramas';
+import { useProfesores } from '../../hooks/useProfesores';
 import {
   useProgramacionMensajes,
   useActualizarProgramacionMensaje,
@@ -117,6 +118,7 @@ function EnvioSwitchCell({ idAlumno, programacion }) {
 }
 
 function EnvioMasivoButton() {
+  const navigate = useNavigate();
   const { data: configData } = useConfiguracionSistema();
   const actualizarMutation = useActualizarConfiguracionSistema();
   const [modalOpen, setModalOpen] = useState(false);
@@ -126,6 +128,16 @@ function EnvioMasivoButton() {
 
   const config = configData?.data;
   const activo = !!config?.envio_masivo_activo;
+
+  // Alumnos que quedarían incluidos en el envío masivo según lo seleccionado
+  // en el modal, para avisar si alguno no tiene horario cargado (su mensaje
+  // saldría sin horario) antes de programar el envío.
+  const activoParaDestinatarios = destinatarios === 'ACTIVOS' ? 'true' : destinatarios === 'INACTIVOS' ? 'false' : '';
+  const { data: alumnosParaMasivo } = useAlumnos(
+    { activo: activoParaDestinatarios, limit: 1000 },
+    { enabled: modalOpen }
+  );
+  const alumnosSinHorario = (alumnosParaMasivo?.data || []).filter((a) => (a.horarios || []).length === 0);
 
   useEffect(() => {
     if (!config) return;
@@ -210,6 +222,27 @@ function EnvioMasivoButton() {
               onChange={setDestinatarios}
             />
           </div>
+          {alumnosSinHorario.length > 0 && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
+              <p className="font-semibold">
+                {alumnosSinHorario.length === 1
+                  ? '1 estudiante quedará incluido sin horario cargado:'
+                  : `${alumnosSinHorario.length} estudiantes quedarán incluidos sin horario cargado:`}
+              </p>
+              <p className="mt-1">
+                Su mensaje de WhatsApp saldrá sin el bloque de horario. Revísalos o asígnales un horario antes de programar el envío:
+              </p>
+              <ul className="mt-2 max-h-28 list-disc space-y-0.5 overflow-y-auto pl-4">
+                {alumnosSinHorario.map((a) => (
+                  <li key={a.id}>
+                    <button type="button" className="underline hover:no-underline" onClick={() => navigate(`/alumnos/${a.id}/editar`)}>
+                      {a.nombre}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="flex justify-end">
             <Button variant="primary" onClick={guardarYActivar} loading={actualizarMutation.isPending}>
               Guardar y activar
@@ -227,19 +260,23 @@ export default function AlumnosPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [programaFilter, setProgramaFilter] = useState('');
+  const [profesorFilter, setProfesorFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('true');
   const [deleteId, setDeleteId] = useState(null);
 
   const { data: alumnosData, isLoading } = useAlumnos({
     nombre: search,
     id_programa: programaFilter,
+    id_profesor: profesorFilter,
     activo: statusFilter,
     page,
     limit,
   });
 
   const { data: programasData } = useProgramas({ activo: 'true', limit: 100 });
+  const { data: profesoresData } = useProfesores({ activo: 'true', limit: 100 });
   const deleteMutation = useEliminarAlumno();
+  const actualizarMutation = useActualizarAlumno();
 
   // El endpoint GET /alumnos no incluye la próxima programación de WhatsApp
   // pendiente, así que se resuelve en el frontend con una consulta aparte a
@@ -283,6 +320,11 @@ export default function AlumnosPage() {
     label: p.nombre,
   }));
 
+  const profesores = (profesoresData?.data || []).map((p) => ({
+    value: p.id,
+    label: `${p.nombre} ${p.apellido}`,
+  }));
+
   const columns = [
     {
       key: 'nombre',
@@ -303,6 +345,13 @@ export default function AlumnosPage() {
       label: 'Acciones',
       render: (row) => (
         <div className="flex gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); actualizarMutation.mutate({ id: row.id, fijado: !row.fijado }); }}
+            title={row.fijado ? 'Quitar de fijados' : 'Fijar arriba de la lista'}
+            className={row.fijado ? 'text-rose hover:text-rose-hover' : 'text-gray-400 hover:text-gray-600'}
+          >
+            {row.fijado ? <Pin className="h-4 w-4 fill-current" /> : <PinOff className="h-4 w-4" />}
+          </button>
           <button onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}`); }} className="text-blue-600 hover:text-blue-800">
             <Eye className="h-4 w-4" />
           </button>
@@ -328,13 +377,20 @@ export default function AlumnosPage() {
           <EnvioMasivoButton />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estudiante por nombre o correo..." />
           <Select
             options={programas}
             value={programaFilter}
             onChange={setProgramaFilter}
             placeholder="Filtrar por programa"
+            searchable
+          />
+          <Select
+            options={profesores}
+            value={profesorFilter}
+            onChange={setProfesorFilter}
+            placeholder="Filtrar por docente"
             searchable
           />
           <Select

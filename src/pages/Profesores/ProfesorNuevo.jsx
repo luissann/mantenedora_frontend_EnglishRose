@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +8,7 @@ import { FormErrorSummary } from '../../components/shared/FormErrorSummary';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { useCrearProfesor } from '../../hooks/useProfesores';
+import { useCrearProfesor, useSubirFotoProfesor } from '../../hooks/useProfesores';
 
 const schema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
@@ -21,6 +22,15 @@ const schema = z.object({
 export default function ProfesorNuevoPage() {
   const navigate = useNavigate();
   const createMutation = useCrearProfesor();
+  const subirFotoMutation = useSubirFotoProfesor();
+  const [foto, setFoto] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(null);
+
+  const onFotoChange = (e) => {
+    const archivo = e.target.files?.[0] || null;
+    setFoto(archivo);
+    setFotoPreview(archivo ? URL.createObjectURL(archivo) : null);
+  };
 
   const {
     register,
@@ -40,7 +50,10 @@ export default function ProfesorNuevoPage() {
 
   const onSubmit = async (values) => {
     try {
-      await createMutation.mutateAsync(values);
+      const { data: profesorCreado } = await createMutation.mutateAsync(values);
+      if (foto && profesorCreado?.id) {
+        await subirFotoMutation.mutateAsync({ id: profesorCreado.id, archivo: foto });
+      }
       navigate('/profesores');
     } catch {}
   };
@@ -53,6 +66,19 @@ export default function ProfesorNuevoPage() {
         <FormErrorSummary errors={errors} />
         <Card watermark>
           <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              {fotoPreview ? (
+                <img src={fotoPreview} alt="Vista previa" className="h-16 w-16 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-light text-sm font-semibold text-rose">
+                  Foto
+                </span>
+              )}
+              <div>
+                <label className="text-sm text-text-secondary">Foto (opcional)</label>
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onFotoChange} className="mt-1 block text-sm" />
+              </div>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Input label="Nombre" {...register('nombre')} error={errors.nombre?.message} />
               <Input label="Apellido" {...register('apellido')} error={errors.apellido?.message} />
