@@ -40,7 +40,10 @@ export function Select({
           onClick={() => setOpen((prev) => !prev)}
           className="w-full rounded-2xl border border-border-input bg-white px-4 py-3 text-left text-sm text-text-primary transition focus:border-rose focus:ring-2 focus:ring-rose/20"
         >
-          <span>{selected ? selected.label : placeholder}</span>
+          <span className="flex items-center gap-2">
+            {selected?.icon}
+            {selected ? selected.label : placeholder}
+          </span>
           <ChevronDown className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" />
         </button>
 
@@ -66,8 +69,9 @@ export function Select({
                     setOpen(false);
                     setQuery('');
                   }}
-                  className="w-full px-4 py-3 text-left text-sm text-text-primary transition hover:bg-rose-light"
+                  className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-text-primary transition hover:bg-rose-light"
                 >
+                  {option.icon}
                   {option.label}
                 </button>
               ))}
