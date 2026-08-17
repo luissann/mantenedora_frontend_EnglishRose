@@ -110,9 +110,11 @@ function EnvioSwitchCell({ idAlumno, programacion }) {
         falseLabel="Pausado"
         onChange={(value) => actualizarMutation.mutate({ id: programacion.id, activo: value })}
       />
-      <p className="text-[11px] text-text-secondary">
-        Próximo: {formatDate(programacion.fecha_envio)} {formatTime(programacion.hora_envio)}
-      </p>
+      {programacion.activo && (
+        <p className="text-[11px] text-text-secondary">
+          Próximo: {formatDate(programacion.fecha_envio)} {formatTime(programacion.hora_envio)}
+        </p>
+      )}
     </div>
   );
 }
@@ -315,15 +317,21 @@ export default function AlumnosPage() {
   const alumnos = alumnosData?.data || [];
   const pagination = alumnosData?.pagination || {};
 
-  const programas = (programasData?.data || []).map((p) => ({
-    value: p.id,
-    label: p.nombre,
-  }));
+  const programas = [
+    { value: '', label: 'Todos los programas' },
+    ...(programasData?.data || []).map((p) => ({
+      value: p.id,
+      label: p.nombre,
+    })),
+  ];
 
-  const profesores = (profesoresData?.data || []).map((p) => ({
-    value: p.id,
-    label: `${p.nombre} ${p.apellido}`,
-  }));
+  const profesores = [
+    { value: '', label: 'Todos los docentes' },
+    ...(profesoresData?.data || []).map((p) => ({
+      value: p.id,
+      label: `${p.nombre} ${p.apellido}`,
+    })),
+  ];
 
   const columns = [
     {
@@ -331,8 +339,23 @@ export default function AlumnosPage() {
       label: 'Nombre Completo',
       render: (row) => row.nombre,
     },
-    { key: 'telefono', label: 'Teléfono' },
-    { key: 'email', label: 'Correo' },
+    {
+      key: 'horario',
+      label: 'Horario',
+      render: (row) => {
+        const horarios = row.horarios || [];
+        if (horarios.length === 0) return <span className="text-text-secondary">Sin horario</span>;
+        return (
+          <div className="space-y-0.5">
+            {horarios.map((h) => (
+              <p key={h.id} className="text-xs">
+                {DIAS_DISPLAY[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
+              </p>
+            ))}
+          </div>
+        );
+      },
+    },
     {
       key: 'envio_whatsapp',
       label: 'Envío WhatsApp',
