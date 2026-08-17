@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Edit, Trash2, Plus, Send, Pin, PinOff } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
@@ -119,7 +119,7 @@ function EnvioSwitchCell({ idAlumno, programacion }) {
   );
 }
 
-function EnvioMasivoButton() {
+function EnvioMasivoButton({ seleccionados, alumnosVisibles, onEnviado }) {
   const navigate = useNavigate();
   const { data: configData } = useConfiguracionSistema();
   const actualizarMutation = useActualizarConfiguracionSistema();
@@ -137,16 +137,31 @@ function EnvioMasivoButton() {
   const activoParaDestinatarios = destinatarios === 'ACTIVOS' ? 'true' : destinatarios === 'INACTIVOS' ? 'false' : '';
   const { data: alumnosParaMasivo } = useAlumnos(
     { activo: activoParaDestinatarios, limit: 1000 },
-    { enabled: modalOpen }
+    { enabled: modalOpen && destinatarios !== 'SELECCION' }
   );
-  const alumnosSinHorario = (alumnosParaMasivo?.data || []).filter((a) => (a.horarios || []).length === 0);
+  // Para SELECCION no hay un endpoint que traiga solo esos ids: se aprovecha
+  // la info que la tabla de Estudiantes ya cargó de los alumnos visibles.
+  // Si hay seleccionados de otra página que no está cargada ahora mismo, no
+  // se les valida el horario acá (limitación conocida, no bloquea el envío).
+  const alumnosSinHorario = destinatarios === 'SELECCION'
+    ? alumnosVisibles.filter((a) => seleccionados.has(a.id) && (a.horarios || []).length === 0)
+    : (alumnosParaMasivo?.data || []).filter((a) => (a.horarios || []).length === 0);
 
-  useEffect(() => {
-    if (!config) return;
-    setDiaSemana(config.envio_masivo_dia_semana || 'DOMINGO');
-    setHora((config.envio_masivo_hora || '20:00:00').slice(0, 5));
-    setDestinatarios(config.envio_masivo_destinatarios || 'ACTIVOS');
-  }, [config]);
+  // Se inicializa al abrir el modal (acción explícita del usuario, no un
+  // efecto reactivo) para no pisar en silencio lo que la dueña ya eligió si
+  // config se refetchea en segundo plano mientras el modal sigue abierto.
+  // Si ya hay estudiantes tildados en la tabla, parte directo en "Solo los
+  // seleccionados" — si no, era fácil dejar el destinatario guardado la
+  // última vez (ACTIVOS, etc.) sin querer y terminar mandando a todos por
+  // no haber tocado el desplegable a propósito.
+  const abrirModal = () => {
+    if (config) {
+      setDiaSemana(config.envio_masivo_dia_semana || 'DOMINGO');
+      setHora((config.envio_masivo_hora || '20:00:00').slice(0, 5));
+    }
+    setDestinatarios(seleccionados.size > 0 ? 'SELECCION' : (config?.envio_masivo_destinatarios || 'ACTIVOS'));
+    setModalOpen(true);
+  };
 
   // El switch usa siempre el día/hora/destinatarios ya guardado (o el
   // default si nunca se configuró); para cambiarlos está el modal, que
@@ -157,6 +172,7 @@ function EnvioMasivoButton() {
       envio_masivo_dia_semana:    config?.envio_masivo_dia_semana || diaSemana,
       envio_masivo_hora:          (config?.envio_masivo_hora || hora).slice(0, 5),
       envio_masivo_destinatarios: config?.envio_masivo_destinatarios || destinatarios,
+      envio_masivo_alumnos_ids:   config?.envio_masivo_alumnos_ids ?? [...seleccionados],
     });
   };
 
@@ -167,8 +183,9 @@ function EnvioMasivoButton() {
         envio_masivo_dia_semana:    diaSemana,
         envio_masivo_hora:          hora,
         envio_masivo_destinatarios: destinatarios,
+        envio_masivo_alumnos_ids:   destinatarios === 'SELECCION' ? [...seleccionados] : undefined,
       },
-      { onSuccess: () => setModalOpen(false) }
+      { onSuccess: () => { setModalOpen(false); onEnviado?.(); } }
     );
   };
 
@@ -183,7 +200,8 @@ function EnvioMasivoButton() {
         />
         <button
           type="button"
-          onClick={() => setModalOpen(true)}
+          onClick={abrirModal}
+          aria-label="Configurar envío masivo"
           className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium text-rose hover:underline"
         >
           <Send className="h-3.5 w-3.5" />
@@ -219,10 +237,16 @@ function EnvioMasivoButton() {
                 { value: 'ACTIVOS', label: 'Solo estudiantes activos' },
                 { value: 'INACTIVOS', label: 'Solo estudiantes inactivos' },
                 { value: 'TODOS', label: 'Todos (activos e inactivos)' },
+                { value: 'SELECCION', label: `Solo los seleccionados con casillas (${seleccionados.size})` },
               ]}
               value={destinatarios}
               onChange={setDestinatarios}
             />
+            {destinatarios === 'SELECCION' && seleccionados.size === 0 && (
+              <p className="mt-2 text-xs text-amber-700">
+                No hay ningún estudiante tildado en la tabla todavía. Cierra este modal, marca las casillas que quieras y vuelve a abrirlo.
+              </p>
+            )}
           </div>
           {alumnosSinHorario.length > 0 && (
             <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
@@ -246,7 +270,12 @@ function EnvioMasivoButton() {
             </div>
           )}
           <div className="flex justify-end">
-            <Button variant="primary" onClick={guardarYActivar} loading={actualizarMutation.isPending}>
+            <Button
+              variant="primary"
+              onClick={guardarYActivar}
+              loading={actualizarMutation.isPending}
+              disabled={destinatarios === 'SELECCION' && seleccionados.size === 0}
+            >
               Guardar y activar
             </Button>
           </div>
@@ -265,6 +294,10 @@ export default function AlumnosPage() {
   const [profesorFilter, setProfesorFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('true');
   const [deleteId, setDeleteId] = useState(null);
+  // Selección con casillas para el envío masivo por "seleccionados" — se
+  // mantiene por id, así que sobrevive a cambios de página/filtro (puedes
+  // tildar en la página 1, cambiar de página y seguir sumando en la 2).
+  const [seleccionados, setSeleccionados] = useState(new Set());
 
   const { data: alumnosData, isLoading } = useAlumnos({
     nombre: search,
@@ -333,7 +366,47 @@ export default function AlumnosPage() {
     })),
   ];
 
+  const toggleSeleccionado = (id) => {
+    setSeleccionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const todosEnPaginaSeleccionados = alumnos.length > 0 && alumnos.every((a) => seleccionados.has(a.id));
+  const toggleTodosEnPagina = () => {
+    setSeleccionados((prev) => {
+      const next = new Set(prev);
+      if (todosEnPaginaSeleccionados) alumnos.forEach((a) => next.delete(a.id));
+      else alumnos.forEach((a) => next.add(a.id));
+      return next;
+    });
+  };
+
   const columns = [
+    {
+      key: 'seleccion',
+      label: (
+        <input
+          type="checkbox"
+          checked={todosEnPaginaSeleccionados}
+          onChange={toggleTodosEnPagina}
+          title="Seleccionar todos los de esta página"
+          className="h-4 w-4 rounded border-border-input text-rose focus:ring-rose"
+        />
+      ),
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={seleccionados.has(row.id)}
+          onChange={(e) => { e.stopPropagation(); toggleSeleccionado(row.id); }}
+          onClick={(e) => e.stopPropagation()}
+          className="h-4 w-4 rounded border-border-input text-rose focus:ring-rose"
+        />
+      ),
+    },
     {
       key: 'nombre',
       label: 'Nombre Completo',
@@ -397,7 +470,11 @@ export default function AlumnosPage() {
           <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/alumnos/nuevo')}>
             Nuevo Estudiante
           </Button>
-          <EnvioMasivoButton />
+          <EnvioMasivoButton
+            seleccionados={seleccionados}
+            alumnosVisibles={alumnos}
+            onEnviado={() => setSeleccionados(new Set())}
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-5">
