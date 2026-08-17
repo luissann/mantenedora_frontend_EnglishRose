@@ -55,7 +55,7 @@ export default function HorariosIndexPage() {
           onSort={handleSort}
         />
       ),
-      render: (row) => row.alumno ? `${row.alumno.nombre} ${row.alumno.apellido}` : '-',
+      render: (row) => row.alumno?.nombre || '-',
     },
     {
       key: 'profesor',
