@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Clock, CreditCard, Layers, MessageCircle, UserCheck, Users } from 'lucide-react';
+import { CreditCard, Layers, MessageCircle, Send, UserCheck, Users } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
 import { StatCard } from '../components/shared/StatCard';
 import { Card } from '../components/ui/Card';
@@ -31,7 +31,7 @@ export default function Dashboard() {
 
   const dashboard = data?.data || {};
   const pagosPorVencer = dashboard.pagosPorVencer || [];
-  const clasesHoy = dashboard.clasesHoy || [];
+  const proximosMensajes = dashboard.proximosMensajes || [];
 
   return (
     <div className="space-y-6">
@@ -79,22 +79,27 @@ export default function Dashboard() {
 
         <Card watermark className="xl:col-start-4 xl:row-start-4">
           <div className="mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-rose" />
-            <h3 className="font-semibold text-text-primary">Clases de hoy</h3>
+            <Send className="h-5 w-5 text-rose" />
+            <h3 className="font-semibold text-text-primary">Alumnos que se les enviará mensaje</h3>
           </div>
-          {clasesHoy.length === 0 ? (
-            <EmptyState title="No hay clases programadas para hoy" />
+          {/* Chequeo rápido para Sofía: si esto aparece vacío pero debería
+              haber envíos en cola (o al revés, aparece algo que no debería),
+              es señal de que hay un bug en el envío masivo/individual. */}
+          {proximosMensajes.length === 0 ? (
+            <EmptyState title="No hay mensajes pendientes de envío" />
           ) : (
-            <div className="space-y-1">
-              {clasesHoy.map((horario) => (
+            <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+              {proximosMensajes.map((mensaje) => (
                 <button
-                  key={horario.id}
+                  key={mensaje.id}
                   type="button"
-                  onClick={() => navigate(`/alumnos/${horario.alumno?.id}`)}
+                  onClick={() => navigate(`/alumnos/${mensaje.alumno?.id}`)}
                   className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm hover:bg-rose-light/50"
                 >
-                  <span className="truncate">{horario.alumno?.nombre}</span>
-                  <span className="ml-3 shrink-0 text-text-secondary">{formatTime(horario.hora_inicio)}</span>
+                  <span className="truncate">{mensaje.alumno?.nombre}</span>
+                  <span className="ml-3 shrink-0 text-text-secondary">
+                    {formatDate(mensaje.fecha_envio)} {formatTime(mensaje.hora_envio)}
+                  </span>
                 </button>
               ))}
             </div>

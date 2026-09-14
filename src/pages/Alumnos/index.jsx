@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Edit, Trash2, Plus, Send, Pin, PinOff } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus, Send, Pin, PinOff, FileText, FileSpreadsheet, ClipboardList, Star } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -23,7 +23,17 @@ import {
 } from '../../hooks/useProgramacionMensajes';
 import { useConfiguracionSistema, useActualizarConfiguracionSistema } from '../../hooks/useConfiguracionSistema';
 import { formatDate, formatTime } from '../../utils/formatters';
-import { DIAS_DISPLAY } from '../../utils/constants';
+import { DIAS_DISPLAY, DIAS_CORTO, ESTADO_BADGE } from '../../utils/constants';
+import {
+  construirFilasInforme,
+  agruparPorProfesor,
+  grillaSemanal,
+  DIA_ORDEN,
+  descargarInformePDF,
+  descargarInformeExcel,
+  descargarHorarioProfesoresPDF,
+  descargarHorarioProfesoresExcel,
+} from '../../utils/informeSemanal';
 
 
 function ReprogramarForm({ idAlumno, onDone, onCancel }) {
@@ -119,6 +129,183 @@ function EnvioSwitchCell({ idAlumno, programacion }) {
   );
 }
 
+function InformeSemanalModal({ proximaProgramacionPorAlumno }) {
+  const [abierto, setAbierto] = useState(false);
+  const [generando, setGenerando] = useState(null);
+  const [profesorSeleccionado, setProfesorSeleccionado] = useState('');
+
+  const { data: configData } = useConfiguracionSistema();
+  const { data: alumnosData, isLoading: cargandoAlumnos } = useAlumnos({ limit: 1000 }, { enabled: abierto });
+  const { data: profesoresData, isLoading: cargandoProfesores } = useProfesores({ limit: 200 }, { enabled: abierto });
+
+  const config = configData?.data;
+  const alumnosTodos = alumnosData?.data || [];
+  const profesoresPorId = useMemo(() => {
+    const mapa = new Map();
+    for (const p of profesoresData?.data || []) mapa.set(p.id, p);
+    return mapa;
+  }, [profesoresData]);
+
+  const filas = useMemo(
+    () => construirFilasInforme(alumnosTodos, profesoresPorId, config, proximaProgramacionPorAlumno),
+    [alumnosTodos, profesoresPorId, config, proximaProgramacionPorAlumno]
+  );
+  const porProfesor = useMemo(
+    () => agruparPorProfesor(alumnosTodos, profesoresPorId, config, proximaProgramacionPorAlumno),
+    [alumnosTodos, profesoresPorId, config, proximaProgramacionPorAlumno]
+  );
+  const listaProfesores = useMemo(() => [...porProfesor.entries()], [porProfesor]);
+
+  const profesorActivo = listaProfesores.find(([key]) => String(key) === profesorSeleccionado) || listaProfesores[0];
+  const cargando = cargandoAlumnos || cargandoProfesores;
+
+  const ejecutar = async (clave, fn) => {
+    setGenerando(clave);
+    try {
+      await fn();
+    } finally {
+      setGenerando(null);
+    }
+  };
+
+  return (
+    <>
+      <Button type="button" variant="secondary" leftIcon={<ClipboardList className="h-4 w-4" />} onClick={() => setAbierto(true)}>
+        Informe semanal
+      </Button>
+
+      <Modal isOpen={abierto} onClose={() => setAbierto(false)} title="Informe del envío masivo semanal" size="lg">
+        <div className="max-h-[70vh] space-y-6 overflow-y-auto pr-1">
+          <p className="text-sm text-text-secondary">
+            {cargando
+              ? 'Cargando...'
+              : config?.envio_masivo_activo
+              ? `Cubre a ${filas.length} estudiante(s) que recibirán el mensaje de ${DIAS_DISPLAY[config.envio_masivo_dia_semana] || config.envio_masivo_dia_semana} ${formatTime(config.envio_masivo_hora)}.`
+              : 'El envío masivo está desactivado — igual se muestra a quién le tocaría según la configuración guardada.'}
+          </p>
+
+          <div>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-semibold">Alumno, profesor y horario</h3>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={cargando || filas.length === 0}
+                  loading={generando === 'informe-pdf'}
+                  onClick={() => ejecutar('informe-pdf', () => descargarInformePDF(filas, config))}
+                >
+                  <FileText className="mr-1.5 h-4 w-4" /> PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={cargando || filas.length === 0}
+                  loading={generando === 'informe-excel'}
+                  onClick={() => ejecutar('informe-excel', () => descargarInformeExcel(filas, config))}
+                >
+                  <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel
+                </Button>
+              </div>
+            </div>
+            {filas.length === 0 && !cargando ? (
+              <p className="text-sm text-text-secondary">Nadie está cubierto por el envío masivo en este momento.</p>
+            ) : (
+              <div className="max-h-64 overflow-y-auto rounded-2xl border border-border-input">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 bg-rose-light">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Alumno</th>
+                      <th className="px-3 py-2 font-semibold">Profesor(es)</th>
+                      <th className="px-3 py-2 font-semibold">Horario</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filas.map((f) => (
+                      <tr key={f.alumno} className="border-t border-border-input">
+                        <td className="px-3 py-2">{f.alumno}</td>
+                        <td className="px-3 py-2">{f.profesores.join(', ')}</td>
+                        <td className="px-3 py-2 whitespace-pre-line">{f.horarios.join('\n')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-semibold">Horario semanal por profesor</h3>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={cargando || porProfesor.size === 0}
+                  loading={generando === 'horario-pdf'}
+                  onClick={() => ejecutar('horario-pdf', () => descargarHorarioProfesoresPDF(porProfesor, config))}
+                >
+                  <FileText className="mr-1.5 h-4 w-4" /> PDF (todos)
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={cargando || porProfesor.size === 0}
+                  loading={generando === 'horario-excel'}
+                  onClick={() => ejecutar('horario-excel', () => descargarHorarioProfesoresExcel(porProfesor, config))}
+                >
+                  <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel (todos)
+                </Button>
+              </div>
+            </div>
+
+            {listaProfesores.length === 0 && !cargando ? (
+              <p className="text-sm text-text-secondary">No hay clases para el grupo cubierto por el envío masivo.</p>
+            ) : (
+              <>
+                <Select
+                  options={listaProfesores.map(([key, prof]) => ({ value: String(key), label: prof.nombre }))}
+                  value={profesorActivo ? String(profesorActivo[0]) : ''}
+                  onChange={setProfesorSeleccionado}
+                  placeholder="Elegir profesor para previsualizar"
+                />
+                {profesorActivo && (
+                  <div className="mt-3 max-h-64 overflow-auto rounded-2xl border border-border-input">
+                    <table className="w-full text-center text-xs">
+                      <thead className="sticky top-0 bg-rose-light">
+                        <tr>
+                          <th className="px-2 py-2 text-left font-semibold">Hora</th>
+                          {DIA_ORDEN.map((d) => (
+                            <th key={d} className="px-2 py-2 font-semibold">{DIAS_DISPLAY[d]}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {grillaSemanal(profesorActivo[1].clases).map((fila) => (
+                          <tr key={fila.hora} className="border-t border-border-input">
+                            <td className="px-2 py-2 text-left font-medium">{fila.hora}</td>
+                            {DIA_ORDEN.map((d) => (
+                              <td key={d} className="whitespace-pre-line px-2 py-2">{fila[d] || ''}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 function EnvioMasivoButton({ seleccionados, alumnosVisibles, onEnviado }) {
   const navigate = useNavigate();
   const { data: configData } = useConfiguracionSistema();
@@ -191,24 +378,46 @@ function EnvioMasivoButton({ seleccionados, alumnosVisibles, onEnviado }) {
 
   return (
     <>
-      <div className="flex items-center gap-2 rounded-2xl border border-border-input bg-white px-3 py-2">
-        <Toggle
-          value={activo}
-          trueLabel="Envío masivo activado"
-          falseLabel="Envío masivo desactivado"
-          onChange={alternar}
-        />
-        <button
-          type="button"
-          onClick={abrirModal}
-          aria-label="Configurar envío masivo"
-          className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium text-rose hover:underline"
-        >
-          <Send className="h-3.5 w-3.5" />
-          {config
-            ? `${DIAS_DISPLAY[config.envio_masivo_dia_semana] || config.envio_masivo_dia_semana} ${String(config.envio_masivo_hora || '').slice(0, 5)}`
-            : 'Configurar'}
-        </button>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2.5 rounded-full border border-border-input bg-white py-1.5 pl-4 pr-1.5">
+          <span className="text-xs font-medium text-text-secondary">Envío masivo</span>
+          <div className="flex rounded-full bg-rose-light p-0.5">
+            {[{ v: true, label: 'Activado' }, { v: false, label: 'Pausado' }].map((opt) => (
+              <button
+                key={String(opt.v)}
+                type="button"
+                onClick={() => activo !== opt.v && alternar(opt.v)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activo === opt.v ? 'bg-white text-rose shadow-sm' : 'text-text-secondary'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={abrirModal}
+            aria-label="Configurar envío masivo"
+            className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-rose-text hover:bg-rose-light"
+          >
+            <Send className="h-3.5 w-3.5" />
+            {config
+              ? `${DIAS_CORTO[config.envio_masivo_dia_semana] || config.envio_masivo_dia_semana} ${String(config.envio_masivo_hora || '').slice(0, 5)}`
+              : 'Configurar'}
+          </button>
+        </div>
+        {/* Recordatorio visible sin abrir el modal: el switch no es un envío
+            puntual de la semana, sigue disparando solo cada semana hasta que
+            alguien lo apague a mano — se agregó tras un envío real que salió
+            un domingo en que la dueña creía tener todo desactivado, porque
+            nadie había vuelto a tocar el switch desde la semana anterior. */}
+        {activo && config && (
+          <p className="px-1 text-xs text-text-secondary">
+            Se repite cada {DIAS_DISPLAY[config.envio_masivo_dia_semana] || config.envio_masivo_dia_semana} a las{' '}
+            {String(config.envio_masivo_hora || '').slice(0, 5)}, automáticamente, hasta que lo apagues.
+          </p>
+        )}
       </div>
 
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Envío masivo automático" size="sm">
@@ -217,8 +426,10 @@ function EnvioMasivoButton({ seleccionados, alumnosVisibles, onEnviado }) {
             El día y la hora que elijas aquí tienen prioridad sobre cualquier envío
             individual que un estudiante ya tuviera agendado: al activarlo (o al guardar un
             cambio de horario), todos los estudiantes activos quedan reagendados exactamente
-            a esa fecha y hora. Se repite cada semana hasta que lo desactives con el switch;
-            que se haya enviado un mensaje no lo apaga.
+            a esa fecha y hora. <strong>Se repite cada semana hasta que lo desactives con el
+            switch</strong> — que se haya enviado un mensaje no lo apaga. Si lo desactivas,
+            cualquier envío que ya estuviera en cola para este ciclo se cancela de inmediato
+            y no se manda.
           </p>
           <DiaSemanaCalendarPicker label="Día de la semana" diaSemana={diaSemana} onChange={setDiaSemana} />
           <div>
@@ -409,21 +620,43 @@ export default function AlumnosPage() {
     },
     {
       key: 'nombre',
-      label: 'Nombre Completo',
-      render: (row) => row.nombre,
+      label: 'Estudiante',
+      render: (row) => {
+        const estado = row.activo ? ESTADO_BADGE.Active : ESTADO_BADGE.Inactive;
+        return (
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${
+                row.fijado ? 'bg-rose' : 'bg-rose-glow'
+              }`}
+            >
+              {row.nombre?.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
+                {row.nombre}
+                {row.fijado && <Star className="h-3.5 w-3.5 fill-rose text-rose" />}
+              </div>
+              <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${estado.className}`}>
+                {estado.label}
+              </span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: 'horario',
       label: 'Horario',
       render: (row) => {
         const horarios = row.horarios || [];
-        if (horarios.length === 0) return <span className="text-text-secondary">Sin horario</span>;
+        if (horarios.length === 0) return <span className="text-sm text-text-muted">Sin horario</span>;
         return (
-          <div className="space-y-0.5">
+          <div className="flex flex-wrap gap-1.5">
             {horarios.map((h) => (
-              <p key={h.id} className="text-xs">
-                {DIAS_DISPLAY[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
-              </p>
+              <span key={h.id} className="rounded-full bg-rose-light px-3 py-1 text-[11.5px] font-semibold text-rose-text">
+                {DIAS_CORTO[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
+              </span>
             ))}
           </div>
         );
@@ -440,21 +673,30 @@ export default function AlumnosPage() {
       key: 'actions',
       label: 'Acciones',
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex justify-end gap-0.5">
           <button
             onClick={(e) => { e.stopPropagation(); actualizarMutation.mutate({ id: row.id, fijado: !row.fijado }); }}
             title={row.fijado ? 'Quitar de fijados' : 'Fijar arriba de la lista'}
-            className={row.fijado ? 'text-rose hover:text-rose-hover' : 'text-gray-400 hover:text-gray-600'}
+            className={`flex h-9 w-9 items-center justify-center rounded-full hover:bg-rose-light ${row.fijado ? 'text-rose' : 'text-text-muted'}`}
           >
             {row.fijado ? <Pin className="h-4 w-4 fill-current" /> : <PinOff className="h-4 w-4" />}
           </button>
-          <button onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}`); }} className="text-blue-600 hover:text-blue-800">
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}`); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-text-secondary hover:bg-rose-light hover:text-rose"
+          >
             <Eye className="h-4 w-4" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}/editar`); }} className="text-amber-600 hover:text-amber-800">
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/alumnos/${row.id}/editar`); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-text-secondary hover:bg-rose-light hover:text-rose"
+          >
             <Edit className="h-4 w-4" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); }} className="text-red-600 hover:text-red-800">
+          <button
+            onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-text-secondary hover:bg-red-50 hover:text-red-600"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -466,19 +708,24 @@ export default function AlumnosPage() {
     <div className="space-y-6">
       <PageHeader title="Estudiantes" />
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-border bg-white p-3.5">
           <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/alumnos/nuevo')}>
             Nuevo Estudiante
           </Button>
-          <EnvioMasivoButton
-            seleccionados={seleccionados}
-            alumnosVisibles={alumnos}
-            onEnviado={() => setSeleccionados(new Set())}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <EnvioMasivoButton
+              seleccionados={seleccionados}
+              alumnosVisibles={alumnos}
+              onEnviado={() => setSeleccionados(new Set())}
+            />
+            <InformeSemanalModal proximaProgramacionPorAlumno={proximaProgramacionPorAlumno} />
+          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-5">
-          <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estudiante por nombre o correo..." />
+        <div className="grid gap-3 rounded-3xl border border-border bg-white p-3.5 md:grid-cols-5">
+          <div className="md:col-span-2">
+            <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estudiante por nombre o correo..." />
+          </div>
           <Select
             options={programas}
             value={programaFilter}
@@ -514,7 +761,12 @@ export default function AlumnosPage() {
         <EmptyState title="No se encontraron estudiantes" actionLabel="Crear Estudiante" onAction={() => navigate('/alumnos/nuevo')} />
       ) : (
         <>
-          <Table columns={columns} data={alumnos} onRowClick={(row) => navigate(`/alumnos/${row.id}`)} />
+          <Table
+            columns={columns}
+            data={alumnos}
+            onRowClick={(row) => navigate(`/alumnos/${row.id}`)}
+            rowClassName={(row) => (row.fijado ? 'bg-rose-light/35' : '')}
+          />
           <Pagination pagination={pagination} onPageChange={setPage} onLimitChange={setLimit} />
         </>
       )}

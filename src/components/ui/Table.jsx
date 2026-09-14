@@ -1,4 +1,4 @@
-export function Table({ columns, data, isLoading, emptyMessage = 'No hay resultados', children, onRowClick }) {
+export function Table({ columns, data, isLoading, emptyMessage = 'No hay resultados', children, onRowClick, rowClassName }) {
   return (
     <div className="overflow-x-auto rounded-3xl border border-border bg-white shadow-sm">
       <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
@@ -32,7 +32,7 @@ export function Table({ columns, data, isLoading, emptyMessage = 'No hay resulta
             <tr
               key={rowIndex}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={`border-b border-border last:border-b-0 hover:bg-rose-light/30 ${onRowClick ? 'cursor-pointer' : ''}`}
+              className={`border-b border-border last:border-b-0 hover:bg-rose-light/30 ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName ? rowClassName(row) : ''}`}
             >
               {columns.map((column) => (
                 <td key={column.key} className="px-4 py-4 align-top text-sm text-text-primary">

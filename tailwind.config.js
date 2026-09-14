@@ -17,6 +17,15 @@ export default {
         },
         page: '#F5F0EB',
         card: '#FFFFFF',
+        text: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
+        },
+        border: {
+          DEFAULT: 'var(--border)',
+          input: 'var(--border-input)',
+        },
         space: {
           900: '#0A0E27',
           800: '#12173A',

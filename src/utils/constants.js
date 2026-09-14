@@ -10,6 +10,16 @@ export const DIAS_DISPLAY = {
   DOMINGO: 'Domingo',
 };
 
+export const DIAS_CORTO = {
+  LUNES: 'Lun',
+  MARTES: 'Mar',
+  MIERCOLES: 'Mié',
+  JUEVES: 'Jue',
+  VIERNES: 'Vie',
+  SABADO: 'Sáb',
+  DOMINGO: 'Dom',
+};
+
 // getDay(): 0=Domingo, 1=Lunes, ... 6=Sábado
 const DIA_POR_GETDAY = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
