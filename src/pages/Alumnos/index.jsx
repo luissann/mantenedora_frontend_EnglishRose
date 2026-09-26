@@ -654,8 +654,13 @@ export default function AlumnosPage() {
         return (
           <div className="flex flex-wrap gap-1.5">
             {horarios.map((h) => (
-              <span key={h.id} className="rounded-full bg-rose-light px-3 py-1 text-[11.5px] font-semibold text-rose-text">
+              <span
+                key={h.id}
+                title={h.detalle || undefined}
+                className="rounded-full bg-rose-light px-3 py-1 text-[11.5px] font-semibold text-rose-text"
+              >
                 {DIAS_CORTO[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
+                {h.detalle && <span className="ml-1 font-normal text-rose-text/70">· {h.detalle}</span>}
               </span>
             ))}
           </div>
