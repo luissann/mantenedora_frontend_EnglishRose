@@ -500,7 +500,7 @@ export default function AlumnosPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(100);
   const [programaFilter, setProgramaFilter] = useState('');
   const [profesorFilter, setProfesorFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('true');

@@ -68,7 +68,7 @@ export function Pagination({ pagination, onPageChange, onLimitChange }) {
               onChange={(event) => onLimitChange(Number(event.target.value))}
               className="appearance-none rounded-2xl border border-border-input bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-rose focus:ring-2 focus:ring-rose/20"
             >
-              {[10, 25, 50].map((option) => (
+              {[10, 25, 50, 100].map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
