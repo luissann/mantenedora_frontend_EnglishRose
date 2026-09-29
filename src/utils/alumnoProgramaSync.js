@@ -10,6 +10,7 @@ import {
   eliminarAlumnoPrograma,
 } from '../api/alumnoProgramas';
 import { crearHorario, actualizarHorario, eliminarHorario } from '../api/horarios';
+import { DIA_ROTATIVO } from './constants';
 
 function buildAlumnoProgramaPayload(idAlumno, programa) {
   return {
@@ -22,11 +23,14 @@ function buildAlumnoProgramaPayload(idAlumno, programa) {
 }
 
 function buildHorarioPayload(idAlumnoPrograma, horario) {
+  // Un rotativo va siempre sin hora, aunque el formulario tuviera una cargada
+  // de antes de que se eligiera ese día (el backend normaliza igual).
+  const esRotativo = horario.dia_semana === DIA_ROTATIVO;
   return {
     id_alumno_programa: idAlumnoPrograma,
     dia_semana: horario.dia_semana,
-    hora_inicio: horario.hora_inicio,
-    hora_fin: horario.hora_fin || undefined,
+    hora_inicio: esRotativo ? null : horario.hora_inicio,
+    hora_fin: esRotativo ? null : (horario.hora_fin || undefined),
     detalle: horario.detalle || null,
   };
 }

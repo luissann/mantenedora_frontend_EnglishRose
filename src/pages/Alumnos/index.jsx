@@ -23,12 +23,12 @@ import {
 } from '../../hooks/useProgramacionMensajes';
 import { useConfiguracionSistema, useActualizarConfiguracionSistema } from '../../hooks/useConfiguracionSistema';
 import { formatDate, formatTime } from '../../utils/formatters';
-import { DIAS_DISPLAY, DIAS_CORTO, ESTADO_BADGE } from '../../utils/constants';
+import { DIAS_DISPLAY, DIAS_CORTO, DIA_ROTATIVO, ESTADO_BADGE } from '../../utils/constants';
 import {
   construirFilasInforme,
   agruparPorProfesor,
   grillaSemanal,
-  DIA_ORDEN,
+  diasDeGrilla,
   descargarInformePDF,
   descargarInformeExcel,
   descargarHorarioProfesoresPDF,
@@ -279,7 +279,7 @@ function InformeSemanalModal({ proximaProgramacionPorAlumno }) {
                       <thead className="sticky top-0 bg-rose-light">
                         <tr>
                           <th className="px-2 py-2 text-left font-semibold">Hora</th>
-                          {DIA_ORDEN.map((d) => (
+                          {diasDeGrilla(profesorActivo[1].clases).map((d) => (
                             <th key={d} className="px-2 py-2 font-semibold">{DIAS_DISPLAY[d]}</th>
                           ))}
                         </tr>
@@ -288,7 +288,7 @@ function InformeSemanalModal({ proximaProgramacionPorAlumno }) {
                         {grillaSemanal(profesorActivo[1].clases).map((fila) => (
                           <tr key={fila.hora} className="border-t border-border-input">
                             <td className="px-2 py-2 text-left font-medium">{fila.hora}</td>
-                            {DIA_ORDEN.map((d) => (
+                            {diasDeGrilla(profesorActivo[1].clases).map((d) => (
                               <td key={d} className="whitespace-pre-line px-2 py-2">{fila[d] || ''}</td>
                             ))}
                           </tr>
@@ -653,16 +653,28 @@ export default function AlumnosPage() {
         if (horarios.length === 0) return <span className="text-sm text-text-muted">Sin horario</span>;
         return (
           <div className="flex flex-wrap gap-1.5">
-            {horarios.map((h) => (
-              <span
-                key={h.id}
-                title={h.detalle || undefined}
-                className="rounded-full bg-rose-light px-3 py-1 text-[11.5px] font-semibold text-rose-text"
-              >
-                {DIAS_CORTO[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
-                {h.detalle && <span className="ml-1 font-normal text-rose-text/70">· {h.detalle}</span>}
-              </span>
-            ))}
+            {horarios.map((h) => {
+              // Un rotativo no tiene hora que mostrar: su detalle es la
+              // pregunta que se le manda al alumno, así que va en su lugar.
+              const rotativo = h.dia_semana === DIA_ROTATIVO;
+              return (
+                <span
+                  key={h.id}
+                  title={h.detalle || undefined}
+                  className={`rounded-full px-3 py-1 text-[11.5px] font-semibold ${
+                    rotativo ? 'bg-amber-100 text-amber-800' : 'bg-rose-light text-rose-text'
+                  }`}
+                >
+                  {DIAS_CORTO[h.dia_semana] || h.dia_semana}
+                  {!rotativo && ` ${formatTime(h.hora_inicio)}`}
+                  {h.detalle && (
+                    <span className={`ml-1 font-normal ${rotativo ? 'text-amber-800/70' : 'text-rose-text/70'}`}>
+                      · {h.detalle}
+                    </span>
+                  )}
+                </span>
+              );
+            })}
           </div>
         );
       },

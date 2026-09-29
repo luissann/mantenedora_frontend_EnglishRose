@@ -9,16 +9,7 @@ import { useProfesor, useEliminarProfesor } from '../../hooks/useProfesores';
 import { useHorarios } from '../../hooks/useHorarios';
 import { formatCLP, formatTime } from '../../utils/formatters';
 import { urlFoto } from '../../utils/assets';
-
-const DIA_LABEL = {
-  LUNES: 'Lunes',
-  MARTES: 'Martes',
-  MIERCOLES: 'Miércoles',
-  JUEVES: 'Jueves',
-  VIERNES: 'Viernes',
-  SABADO: 'Sábado',
-  DOMINGO: 'Domingo',
-};
+import { DIAS_DISPLAY, DIA_ROTATIVO } from '../../utils/constants';
 
 export default function ProfesorPerfilPage() {
   const { id } = useParams();
@@ -111,7 +102,10 @@ export default function ProfesorPerfilPage() {
                     {[h.alumno?.nombre, h.alumno?.apellido].filter(Boolean).join(' ') || 'Estudiante'}
                   </span>
                   <span className="text-text-secondary">
-                    {DIA_LABEL[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)} - {formatTime(h.hora_fin)}
+                    {DIAS_DISPLAY[h.dia_semana] || h.dia_semana}
+                    {h.dia_semana === DIA_ROTATIVO
+                      ? ' · sin hora fija'
+                      : ` ${formatTime(h.hora_inicio)} - ${formatTime(h.hora_fin)}`}
                   </span>
                 </div>
               ))

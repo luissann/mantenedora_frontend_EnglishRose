@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { Spinner } from '../../components/ui/Spinner';
 import { useHorarios, useEliminarHorario } from '../../hooks/useHorarios';
 import { formatTime } from '../../utils/formatters';
+import { DIA_ROTATIVO } from '../../utils/constants';
 
 export default function HorariosIndexPage() {
   const navigate = useNavigate();
@@ -85,7 +86,8 @@ export default function HorariosIndexPage() {
           onSort={handleSort}
         />
       ),
-      render: (row) => formatTime(row.hora_inicio),
+      // Un rotativo no tiene hora: el alumno la confirma por chat.
+      render: (row) => (row.dia_semana === DIA_ROTATIVO ? 'Sin hora fija' : formatTime(row.hora_inicio)),
     },
     {
       key: 'hora_fin',

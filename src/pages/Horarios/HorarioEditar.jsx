@@ -14,14 +14,25 @@ import { Spinner } from '../../components/ui/Spinner';
 import { useActualizarHorario, useHorario } from '../../hooks/useHorarios';
 import { useAlumnos } from '../../hooks/useAlumnos';
 import { useAlumnoProgramasPorAlumno } from '../../hooks/useAlumnoProgramas';
+import { DIA_ROTATIVO } from '../../utils/constants';
 
+// Un horario rotativo no tiene hora: en su lugar el detalle lleva la pregunta
+// que se le manda al alumno para que confirme por chat cuándo puede.
 const schema = z.object({
   id_alumno: z.string().min(1, 'Estudiante requerido'),
   id_alumno_programa: z.string().min(1, 'Programa del estudiante requerido'),
   dia_semana: z.string().min(1, 'Día requerido'),
-  hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
-  hora_fin: z.string().min(1, 'Hora de fin requerida'),
+  hora_inicio: z.string().optional(),
+  hora_fin: z.string().optional(),
   detalle: z.string().optional(),
+}).superRefine((valores, ctx) => {
+  if (valores.dia_semana === DIA_ROTATIVO) return;
+  if (!valores.hora_inicio) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['hora_inicio'], message: 'Hora de inicio requerida' });
+  }
+  if (!valores.hora_fin) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['hora_fin'], message: 'Hora de fin requerida' });
+  }
 });
 
 const normalizeAlumnosResponse = (response) => {
@@ -78,6 +89,7 @@ export default function HorarioEditarPage() {
   }, [horarioData, reset]);
 
   const idAlumno = watch('id_alumno');
+  const esRotativo = watch('dia_semana') === DIA_ROTATIVO;
   const { data: alumnoProgramasData } = useAlumnoProgramasPorAlumno(idAlumno);
 
   if (isLoading) {
@@ -104,8 +116,10 @@ export default function HorarioEditarPage() {
         id,
         id_alumno_programa: Number(values.id_alumno_programa),
         dia_semana: values.dia_semana,
-        hora_inicio: values.hora_inicio,
-        hora_fin: values.hora_fin || undefined,
+        // El backend normaliza igual, pero se manda limpio para que la hora
+        // que quedó escrita antes de elegir "Rotativo" no viaje.
+        hora_inicio: values.dia_semana === DIA_ROTATIVO ? null : values.hora_inicio,
+        hora_fin: values.dia_semana === DIA_ROTATIVO ? null : (values.hora_fin || undefined),
         detalle: values.detalle || null,
       });
       navigate('/horarios');
@@ -142,15 +156,29 @@ export default function HorarioEditarPage() {
             />
             <DiaSemanaCalendarPicker
               label="Día de la Semana"
+              incluirRotativo
               diaSemana={watch('dia_semana')}
               onChange={(dia) => setValue('dia_semana', dia, { shouldValidate: true })}
               error={errors.dia_semana?.message}
             />
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Hora de Inicio" type="time" {...register('hora_inicio')} error={errors.hora_inicio?.message} />
-              <Input label="Hora de Fin" type="time" {...register('hora_fin')} error={errors.hora_fin?.message} />
-            </div>
-            <Input label="Detalle" placeholder="Ej. con fono, online" {...register('detalle')} error={errors.detalle?.message} />
+            {!esRotativo && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input label="Hora de Inicio" type="time" {...register('hora_inicio')} error={errors.hora_inicio?.message} />
+                <Input label="Hora de Fin" type="time" {...register('hora_fin')} error={errors.hora_fin?.message} />
+              </div>
+            )}
+            <Input
+              label={esRotativo ? 'Pregunta para el estudiante' : 'Detalle'}
+              placeholder={esRotativo ? '¿Qué días puedes esta semana?' : 'Ej. con fono, online'}
+              {...register('detalle')}
+              error={errors.detalle?.message}
+            />
+            {esRotativo && (
+              <p className="text-xs text-text-secondary">
+                Un horario rotativo no tiene día ni hora fija: en el mensaje de confirmación
+                se envía esta pregunta para que el estudiante responda cuándo puede.
+              </p>
+            )}
           </div>
         </Card>
 

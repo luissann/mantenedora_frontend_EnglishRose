@@ -13,7 +13,7 @@ import { Toggle } from '../../components/ui/Toggle';
 import { Button } from '../../components/ui/Button';
 import { useProgramas } from '../../hooks/useProgramas';
 import { useProfesores } from '../../hooks/useProfesores';
-import { DIAS_DISPLAY } from '../../utils/constants';
+import { DIAS_DISPLAY, DIA_ROTATIVO } from '../../utils/constants';
 import { formatDate, formatTime } from '../../utils/formatters';
 
 const MAX_PROGRAMAS = 3;
@@ -72,54 +72,61 @@ function HorariosDelPrograma({ control, register, watch, setValue, indexPrograma
               </tr>
             </thead>
             <tbody>
-              {fields.map((field, indexHorario) => (
+              {fields.map((field, indexHorario) => {
+                const prefijo = `programas.${indexPrograma}.horarios.${indexHorario}`;
+                // Un rotativo no tiene hora: en su lugar el detalle pasa a ser
+                // la pregunta que se le manda al alumno para que él confirme.
+                const esRotativo = watch(`${prefijo}.dia_semana`) === DIA_ROTATIVO;
+
+                return (
                 <tr key={field.id} className="border-t border-border-input">
                   <td className="px-3 py-2">
                     <input
                       type="hidden"
-                      {...register(`programas.${indexPrograma}.horarios.${indexHorario}.dia_semana`)}
+                      {...register(`${prefijo}.dia_semana`)}
                     />
                     <div className="flex items-center gap-2">
                       <DiaSemanaCalendarPicker
                         compact
-                        diaSemana={watch(`programas.${indexPrograma}.horarios.${indexHorario}.dia_semana`)}
-                        onChange={(dia) => setValue(
-                          `programas.${indexPrograma}.horarios.${indexHorario}.dia_semana`,
-                          dia,
-                          { shouldValidate: true, shouldDirty: true }
-                        )}
+                        incluirRotativo
+                        diaSemana={watch(`${prefijo}.dia_semana`)}
+                        onChange={(dia) => {
+                          setValue(`${prefijo}.dia_semana`, dia, { shouldValidate: true, shouldDirty: true });
+                          // Al pasar a rotativo se borra la hora que hubiera;
+                          // al volver a un día concreto se repone una por defecto
+                          // para que no quede el campo vacío.
+                          const horaInicio = dia === DIA_ROTATIVO ? '' : (watch(`${prefijo}.hora_inicio`) || '09:00');
+                          setValue(`${prefijo}.hora_inicio`, horaInicio, { shouldValidate: true, shouldDirty: true });
+                          setValue(`${prefijo}.hora_fin`, sumarUnaHora(horaInicio), { shouldValidate: true, shouldDirty: true });
+                        }}
                       />
                       <span className="text-xs font-medium text-text-secondary">
-                        {DIAS_DISPLAY[watch(`programas.${indexPrograma}.horarios.${indexHorario}.dia_semana`)]}
+                        {DIAS_DISPLAY[watch(`${prefijo}.dia_semana`)]}
                       </span>
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <input
-                      type="time"
-                      {...register(`programas.${indexPrograma}.horarios.${indexHorario}.hora_inicio`)}
-                      onChange={(e) => {
-                        const horaInicio = e.target.value;
-                        setValue(
-                          `programas.${indexPrograma}.horarios.${indexHorario}.hora_inicio`,
-                          horaInicio,
-                          { shouldValidate: true, shouldDirty: true }
-                        );
-                        setValue(
-                          `programas.${indexPrograma}.horarios.${indexHorario}.hora_fin`,
-                          sumarUnaHora(horaInicio),
-                          { shouldValidate: true, shouldDirty: true }
-                        );
-                      }}
-                      className="rounded-xl border border-border-input bg-white px-2 py-1.5 text-sm outline-none focus:border-rose"
-                    />
+                    {esRotativo ? (
+                      <span className="text-sm text-text-secondary">Sin hora fija</span>
+                    ) : (
+                      <input
+                        type="time"
+                        {...register(`${prefijo}.hora_inicio`)}
+                        onChange={(e) => {
+                          const horaInicio = e.target.value;
+                          setValue(`${prefijo}.hora_inicio`, horaInicio, { shouldValidate: true, shouldDirty: true });
+                          setValue(`${prefijo}.hora_fin`, sumarUnaHora(horaInicio), { shouldValidate: true, shouldDirty: true });
+                        }}
+                        className="rounded-xl border border-border-input bg-white px-2 py-1.5 text-sm outline-none focus:border-rose"
+                      />
+                    )}
                   </td>
                   <td className="px-3 py-2">
                     <input
                       type="text"
-                      placeholder="Ej. con fono, online"
-                      {...register(`programas.${indexPrograma}.horarios.${indexHorario}.detalle`)}
-                      className="w-36 rounded-xl border border-border-input bg-white px-2 py-1.5 text-sm outline-none focus:border-rose"
+                      placeholder={esRotativo ? '¿Qué días puedes esta semana?' : 'Ej. con fono, online'}
+                      {...register(`${prefijo}.detalle`)}
+                      className={`${esRotativo ? 'w-64' : 'w-36'} rounded-xl border border-border-input bg-white px-2 py-1.5 text-sm outline-none focus:border-rose`}
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -132,7 +139,8 @@ function HorariosDelPrograma({ control, register, watch, setValue, indexPrograma
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -252,14 +260,25 @@ export function AlumnoForm({
 
   const nombrePreview = usarAliasMensaje === false ? '' : (alias?.trim() || nombre?.trim() || 'Estudiante');
 
+  // Debe reflejar lo que arma WhatsappService.generarMensajeConfirmacion en el
+  // backend: los rotativos van al final y salen como la pregunta sola.
   const ordenDiasPreview = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+  const ordenPreviewDe = (h) => {
+    const indice = ordenDiasPreview.indexOf(h.dia_semana);
+    return indice === -1 ? ordenDiasPreview.length : indice;
+  };
   const lineasPreview = programasWatch
     .flatMap((programa) => programa.horarios || [])
     .sort((a, b) => {
-      const diff = ordenDiasPreview.indexOf(a.dia_semana) - ordenDiasPreview.indexOf(b.dia_semana);
+      const diff = ordenPreviewDe(a) - ordenPreviewDe(b);
       return diff !== 0 ? diff : (a.hora_inicio || '').localeCompare(b.hora_inicio || '');
     })
-    .map((h) => `${DIAS_DISPLAY[h.dia_semana] || h.dia_semana} ${h.hora_inicio || '--:--'}${h.detalle ? ` (${h.detalle})` : ''}`)
+    .map((h) => (
+      h.dia_semana === DIA_ROTATIVO
+        ? (h.detalle || '').trim()
+        : `${DIAS_DISPLAY[h.dia_semana] || h.dia_semana} ${h.hora_inicio || '--:--'}${h.detalle ? ` (${h.detalle})` : ''}`
+    ))
+    .filter(Boolean)
     .join('\n');
 
   return (

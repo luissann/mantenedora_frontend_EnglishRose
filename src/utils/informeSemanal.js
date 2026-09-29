@@ -2,7 +2,7 @@
 // realmente toca un botón de descarga — se cargan con import() dinámico
 // dentro de cada función en vez de aquí arriba, para no metérselas a todos
 // los que abren la tabla de Estudiantes (donde vive este informe).
-import { DIAS_DISPLAY } from './constants';
+import { DIAS_DISPLAY, DIA_ROTATIVO } from './constants';
 import { formatTime } from './formatters';
 
 // Mismo criterio que usa el backend (ProgramacionMensajeService._alumnoCubiertoPorMasivo)
@@ -33,6 +33,15 @@ export function recibiraMensajeEstaSemana(alumno, programacionesPorAlumno) {
 
 export const DIA_ORDEN = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
 
+/**
+ * Columnas de la grilla semanal de un profesor. Los rotativos no caen en
+ * ningún día, así que se les da una columna propia al final — pero solo
+ * cuando ese profesor tiene alguno, para no ensuciar la grilla del resto.
+ */
+export function diasDeGrilla(clases) {
+  return clases.some((c) => c.dia === DIA_ROTATIVO) ? [...DIA_ORDEN, DIA_ROTATIVO] : DIA_ORDEN;
+}
+
 const ROSE = [193, 122, 94];     // #C17A5E
 const ROSE_LIGHT = [245, 237, 232]; // #F5EDE8
 const ROSE_TEXT = [139, 94, 74];    // #8B5E4A
@@ -42,7 +51,12 @@ const nombreProfesor = (profesoresPorId, idProfesor) => {
   return p ? `${p.nombre} ${p.apellido}`.trim() : 'Sin profesor asignado';
 };
 
-const rangoHorario = (h) => `${formatTime(h.hora_inicio)}${h.hora_fin ? ` - ${formatTime(h.hora_fin)}` : ''}`;
+// Un rotativo no tiene hora: lo que lo describe es su pregunta (el detalle).
+const rangoHorario = (h) => (
+  h.dia_semana === DIA_ROTATIVO
+    ? 'sin hora fija'
+    : `${formatTime(h.hora_inicio)}${h.hora_fin ? ` - ${formatTime(h.hora_fin)}` : ''}`
+);
 
 /**
  * Una fila por alumno cubierto por el envío masivo, con sus horarios y
@@ -58,7 +72,10 @@ export function construirFilasInforme(alumnos, profesoresPorId, config, programa
         alumno: a.nombre,
         profesores: profesores.length ? profesores : ['Sin profesor asignado'],
         horarios: horarios.length
-          ? horarios.map((h) => `${DIAS_DISPLAY[h.dia_semana] || h.dia_semana} ${rangoHorario(h)}`)
+          ? horarios.map((h) => {
+              const base = `${DIAS_DISPLAY[h.dia_semana] || h.dia_semana} ${rangoHorario(h)}`;
+              return h.dia_semana === DIA_ROTATIVO && h.detalle ? `${base} — ${h.detalle}` : base;
+            })
           : ['Sin horario cargado'],
       };
     })
@@ -83,10 +100,11 @@ export function agruparPorProfesor(alumnos, profesoresPorId, config, programacio
 
 /** Arma la grilla semanal (una fila por bloque horario) para UN profesor. */
 export function grillaSemanal(clases) {
+  const dias = diasDeGrilla(clases);
   const horasUnicas = [...new Set(clases.map((c) => c.hora))].sort();
   return horasUnicas.map((hora) => {
     const fila = { hora };
-    for (const dia of DIA_ORDEN) {
+    for (const dia of dias) {
       const alumnosEnBloque = clases.filter((c) => c.hora === hora && c.dia === dia).map((c) => c.alumno);
       fila[dia] = alumnosEnBloque.join('\n');
     }
@@ -162,8 +180,8 @@ export async function descargarHorarioProfesoresPDF(mapaPorProfesor, config) {
     encabezadoPDF(doc, `Horario semanal — ${prof.nombre}`, config);
     autoTable(doc, {
       startY: 38,
-      head: [['Hora', ...DIA_ORDEN.map((d) => DIAS_DISPLAY[d])]],
-      body: grillaSemanal(prof.clases).map((fila) => [fila.hora, ...DIA_ORDEN.map((d) => fila[d] || '')]),
+      head: [['Hora', ...diasDeGrilla(prof.clases).map((d) => DIAS_DISPLAY[d])]],
+      body: grillaSemanal(prof.clases).map((fila) => [fila.hora, ...diasDeGrilla(prof.clases).map((d) => fila[d] || '')]),
       headStyles: { fillColor: ROSE, textColor: 255, fontStyle: 'bold', halign: 'center' },
       alternateRowStyles: { fillColor: ROSE_LIGHT },
       styles: { fontSize: 8, cellPadding: 2.5, valign: 'top', halign: 'center' },
@@ -187,7 +205,7 @@ export async function descargarHorarioProfesoresExcel(mapaPorProfesor, config) {
     const hoja = workbook.addWorksheet(nombreHoja);
     hoja.columns = [
       { header: 'Hora', key: 'hora', width: 14 },
-      ...DIA_ORDEN.map((d) => ({ header: DIAS_DISPLAY[d], key: d, width: 22 })),
+      ...diasDeGrilla(prof.clases).map((d) => ({ header: DIAS_DISPLAY[d], key: d, width: 22 })),
     ];
     hoja.getRow(1).eachCell((cell) => {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC17A5E' } };

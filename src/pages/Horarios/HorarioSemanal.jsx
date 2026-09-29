@@ -8,6 +8,7 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { useHorarios } from '../../hooks/useHorarios';
 import { useProfesores } from '../../hooks/useProfesores';
 import { formatTime } from '../../utils/formatters';
+import { DIA_ROTATIVO } from '../../utils/constants';
 
 const DIAS = [
   { value: 'LUNES', label: 'Lunes' },
@@ -37,13 +38,18 @@ export default function HorarioSemanalPage() {
 
   const horarios = horariosData?.data || [];
 
+  // Los rotativos no tienen día ni hora, así que no caben en la grilla: van
+  // en una franja aparte para que no queden invisibles.
+  const horariosFijos = horarios.filter((h) => h.dia_semana !== DIA_ROTATIVO);
+  const rotativos = horarios.filter((h) => h.dia_semana === DIA_ROTATIVO);
+
   const franjas = useMemo(() => {
-    const horas = new Set(horarios.map((h) => h.hora_inicio));
+    const horas = new Set(horariosFijos.map((h) => h.hora_inicio));
     return [...horas].sort();
-  }, [horarios]);
+  }, [horariosFijos]);
 
   const celda = (dia, hora) =>
-    horarios.filter((h) => h.dia_semana === dia && h.hora_inicio === hora);
+    horariosFijos.filter((h) => h.dia_semana === dia && h.hora_inicio === hora);
 
   return (
     <div className="space-y-6">
@@ -69,6 +75,8 @@ export default function HorarioSemanalPage() {
       ) : horarios.length === 0 ? (
         <EmptyState title="Este profesor no tiene horarios asignados" />
       ) : (
+        <>
+        {horariosFijos.length > 0 && (
         <Card>
           <div className="overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
@@ -109,6 +117,30 @@ export default function HorarioSemanalPage() {
             </table>
           </div>
         </Card>
+        )}
+
+        {rotativos.length > 0 && (
+          <Card>
+            <h3 className="mb-1 text-sm font-semibold text-text-primary">Rotativos</h3>
+            <p className="mb-3 text-xs text-text-secondary">
+              Clases sin día ni hora fija: el estudiante confirma por WhatsApp respondiendo la pregunta del mensaje.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {rotativos.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => navigate(`/horarios/${h.id}/editar`)}
+                  className="rounded-xl bg-amber-100 px-3 py-2 text-left text-xs text-amber-900 hover:bg-amber-200"
+                >
+                  <div className="font-semibold">{h.alumno ? h.alumno.nombre : 'Estudiante'}</div>
+                  <div className="text-amber-800/80">{h.detalle || 'Sin pregunta cargada'}</div>
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+        </>
       )}
     </div>
   );

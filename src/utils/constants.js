@@ -1,5 +1,20 @@
 export const DIAS_SEMANA = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
 
+/**
+ * El "día 8": clase sin día ni hora fija, para alumnos con turnos rotativos.
+ * En vez de una hora, su `detalle` lleva la pregunta que se le manda al alumno
+ * para que confirme por chat cuándo puede esa semana.
+ *
+ * Va aparte de DIAS_SEMANA a propósito: esa lista se usa para grillas de 7
+ * columnas y para el día del envío masivo, donde un rotativo no tiene lugar.
+ * Para los selectores de horario se usa DIAS_HORARIO.
+ */
+export const DIA_ROTATIVO = 'ROTATIVO';
+
+export const DIAS_HORARIO = [...DIAS_SEMANA, DIA_ROTATIVO];
+
+export const esRotativo = (horario) => horario?.dia_semana === DIA_ROTATIVO;
+
 export const DIAS_DISPLAY = {
   LUNES: 'Lunes',
   MARTES: 'Martes',
@@ -8,6 +23,7 @@ export const DIAS_DISPLAY = {
   VIERNES: 'Viernes',
   SABADO: 'Sábado',
   DOMINGO: 'Domingo',
+  ROTATIVO: 'Rotativo',
 };
 
 export const DIAS_CORTO = {
@@ -18,6 +34,7 @@ export const DIAS_CORTO = {
   VIERNES: 'Vie',
   SABADO: 'Sáb',
   DOMINGO: 'Dom',
+  ROTATIVO: 'Rot.',
 };
 
 // getDay(): 0=Domingo, 1=Lunes, ... 6=Sábado

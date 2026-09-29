@@ -12,7 +12,7 @@ import { Spinner } from '../../components/ui/Spinner';
 import { useAlumnoCompleto } from '../../hooks/useAlumnos';
 import { useActualizarProgramacionMensaje } from '../../hooks/useProgramacionMensajes';
 import { formatDate, formatTime, formatCLP } from '../../utils/formatters';
-import { DIAS_DISPLAY } from '../../utils/constants';
+import { DIAS_DISPLAY, DIA_ROTATIVO } from '../../utils/constants';
 
 function EditarProgramacionModal({ programacion, onClose }) {
   const actualizarMutation = useActualizarProgramacionMensaje();
@@ -198,7 +198,8 @@ export default function AlumnoPerfilPage() {
                     {(ap.horarios || []).length ? (
                       ap.horarios.map((h) => (
                         <p key={h.id} className="text-xs text-text-secondary">
-                          {DIAS_DISPLAY[h.dia_semana] || h.dia_semana} {formatTime(h.hora_inicio)}
+                          {DIAS_DISPLAY[h.dia_semana] || h.dia_semana}
+                          {h.dia_semana !== DIA_ROTATIVO && ` ${formatTime(h.hora_inicio)}`}
                           {h.detalle ? ` · ${h.detalle}` : ''}
                         </p>
                       ))

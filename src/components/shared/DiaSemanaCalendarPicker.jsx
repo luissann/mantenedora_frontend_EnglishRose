@@ -1,12 +1,17 @@
 import { ChevronDown } from 'lucide-react';
-import { DIAS_SEMANA, DIAS_DISPLAY } from '../../utils/constants';
+import { DIAS_SEMANA, DIAS_HORARIO, DIAS_DISPLAY } from '../../utils/constants';
 
 /**
  * Selector directo de día de la semana (select nativo) — el mensaje/clase se
  * repite cada semana, así que no tiene sentido elegir una fecha puntual de
  * calendario para llegar al día.
+ *
+ * `incluirRotativo` agrega el "día 8" (Rotativo), para las clases sin día ni
+ * hora fija. Va apagado por defecto porque este mismo selector se usa para
+ * elegir el día del envío masivo, que sí corre un día concreto.
  */
-export function DiaSemanaCalendarPicker({ diaSemana, onChange, label, error, compact = false }) {
+export function DiaSemanaCalendarPicker({ diaSemana, onChange, label, error, compact = false, incluirRotativo = false }) {
+  const dias = incluirRotativo ? DIAS_HORARIO : DIAS_SEMANA;
   const selectClassName = compact
     ? 'w-32 appearance-none rounded-xl border border-border-input bg-white px-2 py-1.5 pr-8 text-sm outline-none focus:border-rose'
     : 'w-full appearance-none rounded-2xl border border-border-input bg-white px-4 py-3 pr-12 text-sm text-text-primary outline-none focus:border-rose focus:ring-2 focus:ring-rose/20';
@@ -24,7 +29,7 @@ export function DiaSemanaCalendarPicker({ diaSemana, onChange, label, error, com
           className={selectClassName}
         >
           <option value="" disabled>Seleccionar día...</option>
-          {DIAS_SEMANA.map((dia) => (
+          {dias.map((dia) => (
             <option key={dia} value={dia}>{DIAS_DISPLAY[dia] || dia}</option>
           ))}
         </select>
