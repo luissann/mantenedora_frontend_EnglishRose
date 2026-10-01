@@ -1,4 +1,4 @@
-import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog, MessageSquareQuote } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog, MessageSquareQuote, PenLine } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { useResumenTestimonios } from '../../hooks/useTestimonios';
@@ -17,6 +17,7 @@ const navItems = [
   { to: '/profesores', label: 'Profesores', icon: UserCog },
   { to: '/horarios', label: 'Horarios', icon: Clock },
   { to: '/testimonios', label: 'Testimonios', icon: MessageSquareQuote, badge: 'testimonios' },
+  { to: '/editar-web', label: 'Editar web', icon: PenLine },
   { to: '/usuarios', label: 'Usuarios', icon: Users },
   { to: '/configuracion', label: 'Configuración', icon: Settings },
 ];

@@ -22,6 +22,9 @@ const ProgramasIndexPage = lazy(() => import('../pages/Programas'));
 const ProgramaNuevoPage = lazy(() => import('../pages/Programas/ProgramaNuevo'));
 const ProgramaEditarPage = lazy(() => import('../pages/Programas/ProgramaEditar'));
 
+// Editar web (contenido de la landing pública)
+const EditarWebPage = lazy(() => import('../pages/EditarWeb'));
+
 // Testimonios (moderación de lo que se envía desde la landing)
 const TestimoniosIndexPage = lazy(() => import('../pages/Testimonios'));
 
@@ -82,6 +85,10 @@ const router = createBrowserRouter([
       { path: 'programas', element: <ProgramasIndexPage /> },
       { path: 'programas/nuevo', element: <ProgramaNuevoPage /> },
       { path: 'programas/:id/editar', element: <ProgramaEditarPage /> },
+
+      // Editar web
+      { path: 'editar-web', element: <EditarWebPage /> },
+      { path: 'editar-web/:seccion', element: <EditarWebPage /> },
 
       // Testimonios
       { path: 'testimonios', element: <TestimoniosIndexPage /> },
