@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X, Pencil, Trash2, RotateCcw, Star, Mail } from 'lucide-react';
+import { Check, X, Pencil, Trash2, RotateCcw, Star, Mail, Quote } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
@@ -23,6 +23,15 @@ const ESTADO_ESTILO = {
   APROBADO: { label: 'Aprobado', className: 'bg-green-100 text-green-800' },
   RECHAZADO: { label: 'Rechazado', className: 'bg-red-100 text-red-800' },
 };
+
+// El testimonio se muestra como un globo de texto (como un mensaje), con el color según su estado.
+const GLOBO = {
+  PENDIENTE: { globo: 'border-rose/25 bg-rose-light/70', cola: 'border-rose/25 bg-rose-light/70', comilla: 'text-rose/25' },
+  APROBADO: { globo: 'border-green-200 bg-green-50', cola: 'border-green-200 bg-green-50', comilla: 'text-green-300' },
+  RECHAZADO: { globo: 'border-slate-200 bg-slate-100/80', cola: 'border-slate-200 bg-slate-100/80', comilla: 'text-slate-300' },
+};
+
+const iniciales = (nombre) => (nombre || '?').split(' ').filter(Boolean).map((p) => p[0]).join('').slice(0, 2).toUpperCase();
 
 function Estrellas({ valor }) {
   return (
@@ -139,55 +148,65 @@ export default function TestimoniosPage() {
         />
       ) : (
         <>
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {testimonios.map((t) => {
               const est = ESTADO_ESTILO[t.estado] || ESTADO_ESTILO.PENDIENTE;
+              const gl = GLOBO[t.estado] || GLOBO.PENDIENTE;
               return (
-                <article key={t.id} className="rounded-3xl border border-border bg-white p-6 shadow-sm">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="text-lg font-semibold text-text-primary">{t.nombre}</h3>
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${est.className}`}>{est.label}</span>
-                      </div>
-                      <p className="mt-1 text-sm text-text-secondary">
-                        {[t.rol, t.clases ? `${t.clases} clases` : null].filter(Boolean).join(' · ') || 'Sin rol indicado'}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-start gap-1 md:items-end">
-                      <Estrellas valor={t.calificacion} />
-                      <span className="text-xs text-text-secondary">{formatDateTime(t.created_at)}</span>
-                    </div>
+                <article key={t.id} className="flex gap-3 sm:gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-light font-playfair text-lg text-rose ring-2 ring-white sm:h-12 sm:w-12" aria-hidden="true">
+                    {iniciales(t.nombre)}
                   </div>
 
-                  <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-text-primary">“{t.texto}”</p>
-
-                  {t.email && (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-text-secondary">
-                      <Mail className="h-3.5 w-3.5" /> {t.email} <span className="text-slate-400">(privado, no se publica)</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <h3 className="text-base font-semibold text-text-primary">{t.nombre}</h3>
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${est.className}`}>{est.label}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-text-secondary">
+                        <Estrellas valor={t.calificacion} />
+                        <span>{formatDateTime(t.created_at)}</span>
+                      </div>
+                    </div>
+                    <p className="mt-0.5 text-sm text-text-secondary">
+                      {[t.rol, t.clases ? `${t.clases} clases` : null].filter(Boolean).join(' · ') || 'Sin rol indicado'}
                     </p>
-                  )}
 
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {t.estado !== 'APROBADO' && (
-                      <Button size="sm" leftIcon={<Check className="h-4 w-4" />} onClick={() => mover(t.id, 'APROBADO')} disabled={cambiarEstado.isPending}>
-                        Aprobar y publicar
-                      </Button>
+                    {/* Globo de texto con cola hacia el avatar */}
+                    <div className={`relative mt-3 rounded-3xl rounded-tl-md border px-6 py-5 shadow-sm ${gl.globo}`}>
+                      <span className={`absolute -left-[7px] top-4 hidden h-3.5 w-3.5 rotate-45 border-b border-l sm:block ${gl.cola}`} aria-hidden="true" />
+                      <Quote className={`absolute right-4 top-3 h-8 w-8 ${gl.comilla}`} aria-hidden="true" />
+                      <p className="whitespace-pre-line pr-6 text-[15px] italic leading-relaxed text-text-primary">{t.texto}</p>
+                    </div>
+
+                    {t.email && (
+                      <p className="mt-3 flex items-center gap-2 text-xs text-text-secondary">
+                        <Mail className="h-3.5 w-3.5" /> {t.email} <span className="text-slate-400">(privado, no se publica)</span>
+                      </p>
                     )}
-                    {t.estado === 'PENDIENTE' && (
-                      <Button size="sm" variant="secondary" leftIcon={<X className="h-4 w-4" />} onClick={() => mover(t.id, 'RECHAZADO')} disabled={cambiarEstado.isPending}>
-                        Rechazar
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {t.estado !== 'APROBADO' && (
+                        <Button size="sm" leftIcon={<Check className="h-4 w-4" />} onClick={() => mover(t.id, 'APROBADO')} disabled={cambiarEstado.isPending}>
+                          Aprobar y publicar
+                        </Button>
+                      )}
+                      {t.estado === 'PENDIENTE' && (
+                        <Button size="sm" variant="secondary" leftIcon={<X className="h-4 w-4" />} onClick={() => mover(t.id, 'RECHAZADO')} disabled={cambiarEstado.isPending}>
+                          Rechazar
+                        </Button>
+                      )}
+                      {t.estado === 'APROBADO' && (
+                        <Button size="sm" variant="secondary" leftIcon={<RotateCcw className="h-4 w-4" />} onClick={() => mover(t.id, 'PENDIENTE')} disabled={cambiarEstado.isPending}>
+                          Quitar de la web
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => setEditando(t)}>Editar</Button>
+                      <Button size="sm" variant="ghost" leftIcon={<Trash2 className="h-4 w-4 text-red-600" />} onClick={() => setEliminarId(t.id)}>
+                        <span className="text-red-600">Eliminar</span>
                       </Button>
-                    )}
-                    {t.estado === 'APROBADO' && (
-                      <Button size="sm" variant="secondary" leftIcon={<RotateCcw className="h-4 w-4" />} onClick={() => mover(t.id, 'PENDIENTE')} disabled={cambiarEstado.isPending}>
-                        Quitar de la web
-                      </Button>
-                    )}
-                    <Button size="sm" variant="ghost" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => setEditando(t)}>Editar</Button>
-                    <Button size="sm" variant="ghost" leftIcon={<Trash2 className="h-4 w-4 text-red-600" />} onClick={() => setEliminarId(t.id)}>
-                      <span className="text-red-600">Eliminar</span>
-                    </Button>
+                    </div>
                   </div>
                 </article>
               );
