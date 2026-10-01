@@ -1,6 +1,7 @@
-import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog, MessageSquareQuote } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { useResumenTestimonios } from '../../hooks/useTestimonios';
 
 // Primera etapa: solo lo pedido (envío de WhatsApp automático + lo mínimo
 // para sostenerlo). Pagos, Boletas y Pagos a Profesores quedan desarrollados
@@ -15,11 +16,16 @@ const navItems = [
   { to: '/programas', label: 'Programas', icon: Layers },
   { to: '/profesores', label: 'Profesores', icon: UserCog },
   { to: '/horarios', label: 'Horarios', icon: Clock },
+  { to: '/testimonios', label: 'Testimonios', icon: MessageSquareQuote, badge: 'testimonios' },
   { to: '/usuarios', label: 'Usuarios', icon: Users },
   { to: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
 function SidebarContent({ logout, onNavigate }) {
+  // Testimonios por revisar: distintivo en el menú para que no pasen desapercibidos.
+  const { data: resumenTestimonios } = useResumenTestimonios();
+  const pendientes = resumenTestimonios?.data?.pendientes || 0;
+
   return (
     <>
       <div className="mb-10 flex items-center gap-3 px-2">
@@ -31,7 +37,7 @@ function SidebarContent({ logout, onNavigate }) {
       </div>
 
       <nav className="space-y-1">
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {navItems.map(({ to, label, icon: Icon, badge }) => (
           <NavLink
             key={to}
             to={to}
@@ -44,6 +50,11 @@ function SidebarContent({ logout, onNavigate }) {
           >
             <Icon className="h-5 w-5" />
             <span>{label}</span>
+            {badge === 'testimonios' && pendientes > 0 && (
+              <span className="ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-rose px-2 py-0.5 text-xs font-semibold text-white" aria-label={`${pendientes} testimonios por revisar`}>
+                {pendientes}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

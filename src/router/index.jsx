@@ -22,6 +22,9 @@ const ProgramasIndexPage = lazy(() => import('../pages/Programas'));
 const ProgramaNuevoPage = lazy(() => import('../pages/Programas/ProgramaNuevo'));
 const ProgramaEditarPage = lazy(() => import('../pages/Programas/ProgramaEditar'));
 
+// Testimonios (moderación de lo que se envía desde la landing)
+const TestimoniosIndexPage = lazy(() => import('../pages/Testimonios'));
+
 // Pagos
 const PagosIndexPage = lazy(() => import('../pages/Pagos'));
 const PagoNuevoPage = lazy(() => import('../pages/Pagos/PagoNuevo'));
@@ -79,6 +82,9 @@ const router = createBrowserRouter([
       { path: 'programas', element: <ProgramasIndexPage /> },
       { path: 'programas/nuevo', element: <ProgramaNuevoPage /> },
       { path: 'programas/:id/editar', element: <ProgramaEditarPage /> },
+
+      // Testimonios
+      { path: 'testimonios', element: <TestimoniosIndexPage /> },
 
       // Pagos — se deja accesible solo el flujo de registrar/editar pago desde
       // el perfil de un Alumno; el listado independiente queda bloqueado.
