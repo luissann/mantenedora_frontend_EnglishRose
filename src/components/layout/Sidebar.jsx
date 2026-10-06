@@ -1,7 +1,8 @@
-import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog, MessageSquareQuote, PenLine } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Layers, Clock, Users, Settings, LogOut, X, UserCog, MessageSquareQuote, PenLine, Inbox } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { useResumenTestimonios } from '../../hooks/useTestimonios';
+import { useResumenMensajes } from '../../hooks/useMensajes';
 
 // Primera etapa: solo lo pedido (envío de WhatsApp automático + lo mínimo
 // para sostenerlo). Pagos, Boletas y Pagos a Profesores quedan desarrollados
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/profesores', label: 'Profesores', icon: UserCog },
   { to: '/horarios', label: 'Horarios', icon: Clock },
   { to: '/testimonios', label: 'Testimonios', icon: MessageSquareQuote, badge: 'testimonios' },
+  { to: '/mensajes', label: 'Mensajes', icon: Inbox, badge: 'mensajes' },
   { to: '/editar-web', label: 'Editar web', icon: PenLine },
   { to: '/usuarios', label: 'Usuarios', icon: Users },
   { to: '/configuracion', label: 'Configuración', icon: Settings },
@@ -26,6 +28,9 @@ function SidebarContent({ logout, onNavigate }) {
   // Testimonios por revisar: distintivo en el menú para que no pasen desapercibidos.
   const { data: resumenTestimonios } = useResumenTestimonios();
   const pendientes = resumenTestimonios?.data?.pendientes || 0;
+  // Mensajes de contacto sin leer.
+  const { data: resumenMensajes } = useResumenMensajes();
+  const nuevosMensajes = resumenMensajes?.data?.nuevos || 0;
 
   return (
     <>
@@ -54,6 +59,11 @@ function SidebarContent({ logout, onNavigate }) {
             {badge === 'testimonios' && pendientes > 0 && (
               <span className="ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-rose px-2 py-0.5 text-xs font-semibold text-white" aria-label={`${pendientes} testimonios por revisar`}>
                 {pendientes}
+              </span>
+            )}
+            {badge === 'mensajes' && nuevosMensajes > 0 && (
+              <span className="ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-rose px-2 py-0.5 text-xs font-semibold text-white" aria-label={`${nuevosMensajes} mensajes sin leer`}>
+                {nuevosMensajes}
               </span>
             )}
           </NavLink>

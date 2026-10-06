@@ -27,6 +27,8 @@ const EditarWebPage = lazy(() => import('../pages/EditarWeb'));
 
 // Testimonios (moderación de lo que se envía desde la landing)
 const TestimoniosIndexPage = lazy(() => import('../pages/Testimonios'));
+// Mensajes (bandeja del formulario de Contacto de la landing)
+const MensajesIndexPage = lazy(() => import('../pages/Mensajes'));
 
 // Pagos
 const PagosIndexPage = lazy(() => import('../pages/Pagos'));
@@ -92,6 +94,9 @@ const router = createBrowserRouter([
 
       // Testimonios
       { path: 'testimonios', element: <TestimoniosIndexPage /> },
+
+      // Mensajes
+      { path: 'mensajes', element: <MensajesIndexPage /> },
 
       // Pagos — se deja accesible solo el flujo de registrar/editar pago desde
       // el perfil de un Alumno; el listado independiente queda bloqueado.
