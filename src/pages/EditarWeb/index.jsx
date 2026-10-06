@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useBlocker, useNavigate, useParams } from 'react-router-dom';
-import { ExternalLink, Save, Undo2, RotateCcw, AlertTriangle, CircleCheck, Info } from 'lucide-react';
+import { ExternalLink, Save, Undo2, RotateCcw, AlertTriangle, CircleCheck, Info, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
@@ -8,8 +8,9 @@ import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 import { formatDateTime } from '../../utils/formatters';
 import { useSitio, useGuardarSitio, useRestaurarSitio } from '../../hooks/useSitio';
-import { SECCIONES, validarSeccion } from './schemas';
+import { SECCIONES, PREVIA, validarSeccion } from './schemas';
 import { FormularioSeccion, conIds, sinIds } from './campos';
+import VistaPrevia from './VistaPrevia';
 
 const SITIO_URL = import.meta.env.VITE_SITIO_URL || 'https://englishroseacademy.cl';
 
@@ -31,6 +32,18 @@ function VistaGoogle({ valor }) {
   );
 }
 
+// ¿La pantalla es lo bastante ancha para mostrar la vista previa al lado del formulario?
+function useAncha() {
+  const [ancha, setAncha] = useState(() => window.matchMedia('(min-width: 1280px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)');
+    const f = (e) => setAncha(e.matches);
+    mq.addEventListener('change', f);
+    return () => mq.removeEventListener('change', f);
+  }, []);
+  return ancha;
+}
+
 export default function EditarWebPage() {
   const { seccion: param } = useParams();
   const navigate = useNavigate();
@@ -42,6 +55,9 @@ export default function EditarWebPage() {
   const [intentado, setIntentado] = useState({});    // se intentó guardar: mostrar errores en vivo
   const [erroresServidor, setErroresServidor] = useState({});
   const [confirmar, setConfirmar] = useState(null);  // 'restaurar' | 'descartar'
+  const ancha = useAncha();
+  const [previa, setPrevia] = useState(() => { try { return localStorage.getItem('editarweb_previa') === '1'; } catch { return false; } });
+  const alternarPrevia = () => setPrevia((v) => { const n = !v; try { localStorage.setItem('editarweb_previa', n ? '1' : '0'); } catch { /* sin almacenamiento */ } return n; });
 
   const secciones = resp?.data || [];
   const def = SECCIONES.find((s) => s.clave === param);
@@ -58,6 +74,21 @@ export default function EditarWebPage() {
     const s = secciones.find((x) => x.clave === clave);
     return drafts[clave] !== undefined && !!s && estable(sinIds(drafts[clave])) !== estable(s.valor);
   };
+  // Contenido para la vista previa: lo personalizado + lo que se está editando (sin guardar).
+  const contenidoPrevia = useMemo(() => {
+    const salida = {};
+    secciones.forEach((s) => {
+      const dr = drafts[s.clave];
+      if (dr !== undefined) {
+        const v = sinIds(dr);
+        if (estable(v) !== estable(s.original)) salida[s.clave] = v;
+      } else if (s.personalizado) {
+        salida[s.clave] = s.valor;
+      }
+    });
+    return salida;
+  }, [drafts, secciones]);
+
   const clavesSucias = useMemo(() => SECCIONES.filter((s) => sucio(s.clave)).map((s) => s.clave), [drafts, secciones]); // eslint-disable-line react-hooks/exhaustive-deps
   const hayCambios = clavesSucias.length > 0;
 
@@ -123,9 +154,14 @@ export default function EditarWebPage() {
         <p className="max-w-2xl text-sm text-text-secondary">
           Cambia los textos de la página pública. Al <strong>guardar y publicar</strong> se actualiza la web (se ve en cerca de 1 minuto).
         </p>
-        <a href={SITIO_URL} target="_blank" rel="noopener noreferrer">
-          <Button variant="secondary" size="sm" leftIcon={<ExternalLink className="h-4 w-4" />}>Ver sitio</Button>
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={previa ? 'primary' : 'secondary'} size="sm" leftIcon={<Eye className="h-4 w-4" />} onClick={alternarPrevia} aria-pressed={previa}>
+            {previa ? 'Ocultar vista previa' : 'Vista previa'}
+          </Button>
+          <a href={SITIO_URL} target="_blank" rel="noopener noreferrer">
+            <Button variant="secondary" size="sm" leftIcon={<ExternalLink className="h-4 w-4" />}>Ver sitio</Button>
+          </a>
+        </div>
       </div>
 
       {isLoading ? (
@@ -137,7 +173,7 @@ export default function EditarWebPage() {
           <Button className="mt-4" onClick={() => refetch()}>Reintentar</Button>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
+        <div className={`grid gap-6 ${previa && ancha ? 'xl:grid-cols-[210px_minmax(0,1fr)_minmax(0,1.25fr)]' : 'lg:grid-cols-[250px_minmax(0,1fr)]'}`}>
           {/* Lista de secciones: columna en escritorio, selector en móvil */}
           <nav aria-label="Secciones de la web">
             <select
@@ -233,7 +269,21 @@ export default function EditarWebPage() {
               </div>
             </div>
           </section>
+
+          {/* Vista previa al lado (pantalla ancha) */}
+          {previa && ancha && (
+            <aside className="min-w-0">
+              <div className="sticky top-20">
+                <VistaPrevia pagina={PREVIA[def.clave][0]} ancla={PREVIA[def.clave][1]} contenido={contenidoPrevia} onCerrar={alternarPrevia} />
+              </div>
+            </aside>
+          )}
         </div>
+      )}
+
+      {/* Vista previa en pantalla completa (pantallas más angostas) */}
+      {previa && !ancha && !isLoading && !isError && (
+        <VistaPrevia flotante pagina={PREVIA[def.clave][0]} ancla={PREVIA[def.clave][1]} contenido={contenidoPrevia} onCerrar={alternarPrevia} />
       )}
 
       <ConfirmDialog

@@ -193,6 +193,14 @@ export const SECCIONES = [
   },
 ];
 
+// Página de la web (y ancla) que muestra la vista previa para cada sección.
+export const PREVIA = {
+  hero: ['index.html', 'hero'], features: ['index.html', 'features'], services: ['index.html', 'programs'],
+  planes: ['services.html', 'planes'], howItWorks: ['index.html', 'howItWorks'], cta: ['index.html', 'cta'],
+  sofia: ['index.html', 'sofiaSection'], about: ['about.html', ''], faq: ['faq.html', ''], contact: ['contact.html', ''],
+  seo: ['index.html', ''], footer: ['index.html', 'footer'], visibility: ['index.html', ''],
+};
+
 // ── Validación en el navegador (misma regla que el backend, para avisar antes de guardar) ──
 const FORMATOS = {
   email: [/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']{2,}$/, 'no es un email válido'],
