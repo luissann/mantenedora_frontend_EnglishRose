@@ -40,6 +40,7 @@ const HorariosIndexPage = lazy(() => import('../pages/Horarios'));
 const HorarioNuevoPage = lazy(() => import('../pages/Horarios/HorarioNuevo'));
 const HorarioEditarPage = lazy(() => import('../pages/Horarios/HorarioEditar'));
 const HorarioSemanalPage = lazy(() => import('../pages/Horarios/HorarioSemanal'));
+const HorarioDiaPage = lazy(() => import('../pages/Horarios/HorarioDia'));
 
 // Profesores
 const ProfesoresIndexPage = lazy(() => import('../pages/Profesores'));
@@ -108,6 +109,7 @@ const router = createBrowserRouter([
       { path: 'horarios', element: <HorariosIndexPage /> },
       { path: 'horarios/nuevo', element: <HorarioNuevoPage /> },
       { path: 'horarios/semana', element: <HorarioSemanalPage /> },
+      { path: 'horarios/dia', element: <HorarioDiaPage /> },
       { path: 'horarios/:id/editar', element: <HorarioEditarPage /> },
 
       // Profesores

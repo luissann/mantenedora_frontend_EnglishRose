@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash2, Plus, CalendarDays } from 'lucide-react';
+import { Edit, Trash2, Plus, CalendarDays, Columns3 } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -18,7 +18,7 @@ export default function HorariosIndexPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(100);
   const [sortBy, setSortBy] = useState('dia_semana');
   const [sortDir, setSortDir] = useState('asc');
   const [deleteId, setDeleteId] = useState(null);
@@ -129,6 +129,9 @@ export default function HorariosIndexPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={() => navigate('/horarios/nuevo')}>
           Nuevo Horario
+        </Button>
+        <Button variant="secondary" leftIcon={<Columns3 className="h-4 w-4" />} onClick={() => navigate('/horarios/dia')}>
+          Vista por día
         </Button>
         <Button variant="secondary" leftIcon={<CalendarDays className="h-4 w-4" />} onClick={() => navigate('/horarios/semana')}>
           Vista Semanal
