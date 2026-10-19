@@ -3,7 +3,7 @@
 // validación del backend: Backend/src/config/contenidoSitioSchema.js).
 import {
   House, Sparkles, Layers, Gift, ListOrdered, Megaphone, UserRound, BookOpen,
-  CircleHelp, Phone, Search, PanelBottom, Eye,
+  CircleHelp, Phone, Search, PanelBottom, Eye, Users,
 } from 'lucide-react';
 
 const t = (k, label, extra = {}) => ({ k, label, tipo: 'texto', ...extra });
@@ -125,11 +125,27 @@ export const SECCIONES = [
     campos: [
       t('eyebrow', 'Texto pequeño', { max: 60 }),
       t('title', 'Título', { max: 120 }),
-      area('quote1', 'Párrafo 1', { max: 1200, rows: 5 }),
-      area('quote2', 'Párrafo 2', { max: 1500, rows: 6 }),
-      area('quote3', 'Párrafo 3', { max: 1200, rows: 5 }),
+      area('quote1', 'Párrafo 1 (texto de apertura, junto a la foto)', { max: 1200, rows: 5 }),
+      area('quote2', 'Párrafo 2 (tarjeta “Lo que he visto”)', { max: 1500, rows: 6 }),
+      area('quote3', 'Párrafo 3 (tarjeta “Cómo lo hacemos”)', { max: 1200, rows: 5 }),
       { k: 'badges', tipo: 'textos', label: 'Etiquetas', max: 8, itemMax: 40, nuevo: 'Nueva etiqueta', ayuda: 'Las pastillas que aparecen bajo los párrafos.' },
     ],
+  },
+  {
+    clave: 'team', icon: Users, titulo: 'Equipo',
+    donde: 'Página “Sobre nosotros” · “Nuestro equipo” (cartas que se dan vuelta)',
+    campos: [{
+      k: '_lista', tipo: 'lista-raiz', label: 'Integrantes', max: 12,
+      ayuda: 'La carta muestra la foto y el nombre; al tocarla se da vuelta y aparecen el cargo y la frase.',
+      titulo: (it) => it.name || 'Integrante',
+      nuevo: () => ({ name: '', role: '', bio: '', photo: '' }),
+      campos: [
+        t('name', 'Nombre', { max: 80, req: true }),
+        t('role', 'Cargo', { max: 80, ayuda: 'Ej. “Docente de inglés”, “Fonoaudiólogo”' }),
+        area('bio', 'Frase breve', { max: 200, rows: 3, ayuda: 'Muy corta: se lee en una carta pequeña.' }),
+        { k: 'photo', tipo: 'imagen', label: 'Foto', max: 200, ayuda: 'Ruta de una imagen que ya esté en la web (ej. img/equipo/nombre.webp).' },
+      ],
+    }],
   },
   {
     clave: 'faq', icon: CircleHelp, titulo: 'Preguntas frecuentes',
@@ -197,7 +213,7 @@ export const SECCIONES = [
 export const PREVIA = {
   hero: ['index.html', 'hero'], features: ['index.html', 'features'], services: ['index.html', 'programs'],
   planes: ['services.html', 'planes'], howItWorks: ['index.html', 'howItWorks'], cta: ['index.html', 'cta'],
-  sofia: ['index.html', 'sofiaSection'], about: ['about.html', ''], faq: ['faq.html', ''], contact: ['contact.html', ''],
+  sofia: ['index.html', 'sofiaSection'], about: ['about.html', ''], team: ['about.html', 'equipo'], faq: ['faq.html', ''], contact: ['contact.html', ''],
   seo: ['index.html', ''], footer: ['index.html', 'footer'], visibility: ['index.html', ''],
 };
 
