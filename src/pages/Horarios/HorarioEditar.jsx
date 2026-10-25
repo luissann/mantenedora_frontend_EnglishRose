@@ -119,7 +119,7 @@ export default function HorarioEditarPage() {
         // El backend normaliza igual, pero se manda limpio para que la hora
         // que quedó escrita antes de elegir "Rotativo" no viaje.
         hora_inicio: values.dia_semana === DIA_ROTATIVO ? null : values.hora_inicio,
-        hora_fin: values.dia_semana === DIA_ROTATIVO ? null : (values.hora_fin || undefined),
+        hora_fin: values.dia_semana === DIA_ROTATIVO ? undefined : (values.hora_fin || undefined), // nunca null: el backend lo rechaza con 422
         detalle: values.detalle || null,
       });
       navigate('/horarios');

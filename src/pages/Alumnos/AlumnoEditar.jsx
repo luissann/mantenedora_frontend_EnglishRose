@@ -15,15 +15,9 @@ import {
   useActualizarProgramacionMensaje,
 } from '../../hooks/useProgramacionMensajes';
 import { sincronizarProgramasYHorarios } from '../../utils/alumnoProgramaSync';
+import { horarioSchema } from '../../utils/horarioSchema';
+import { avisarFormularioInvalido } from '../../utils/avisarFormularioInvalido';
 import { AlumnoForm } from './AlumnoForm';
-
-const horarioSchema = z.object({
-  id: z.union([z.number(), z.string()]).optional(),
-  dia_semana: z.string().min(1, 'Día requerido'),
-  hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
-  hora_fin: z.string().optional(),
-  detalle: z.string().optional(),
-});
 
 const programaSchema = z
   .object({
@@ -191,7 +185,7 @@ export default function AlumnoEditarPage() {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error al actualizar estudiante');
     }
-  });
+  }, avisarFormularioInvalido);
 
   return (
     <div className="space-y-6">

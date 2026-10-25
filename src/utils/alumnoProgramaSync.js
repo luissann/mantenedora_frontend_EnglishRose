@@ -30,7 +30,8 @@ function buildHorarioPayload(idAlumnoPrograma, horario) {
     id_alumno_programa: idAlumnoPrograma,
     dia_semana: horario.dia_semana,
     hora_inicio: esRotativo ? null : horario.hora_inicio,
-    hora_fin: esRotativo ? null : (horario.hora_fin || undefined),
+    // OJO: sin hora_fin (undefined), NO null: el backend rechaza hora_fin: null con 422.
+    hora_fin: esRotativo ? undefined : (horario.hora_fin || undefined),
     detalle: horario.detalle || null,
   };
 }

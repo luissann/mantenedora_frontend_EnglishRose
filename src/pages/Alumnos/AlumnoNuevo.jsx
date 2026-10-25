@@ -6,15 +6,10 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { crearAlumnoCompleto } from '../../api/alumnos';
+import { horarioSchema } from '../../utils/horarioSchema';
+import { avisarFormularioInvalido } from '../../utils/avisarFormularioInvalido';
+import { DIA_ROTATIVO } from '../../utils/constants';
 import { AlumnoForm } from './AlumnoForm';
-
-const horarioSchema = z.object({
-  id: z.union([z.number(), z.string()]).optional(),
-  dia_semana: z.string().min(1, 'Día requerido'),
-  hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
-  hora_fin: z.string().optional(),
-  detalle: z.string().optional(),
-});
 
 const programaSchema = z
   .object({
@@ -102,8 +97,9 @@ export default function AlumnoNuevoPage() {
           valor_clase_clp: Number(programa.valor_clase_clp),
           horarios: (programa.horarios || []).map((horario) => ({
             dia_semana: horario.dia_semana,
-            hora_inicio: horario.hora_inicio,
-            hora_fin: horario.hora_fin || undefined,
+            // Un rotativo no tiene hora (el backend la descarta igual).
+            hora_inicio: horario.dia_semana === DIA_ROTATIVO ? null : horario.hora_inicio,
+            hora_fin: horario.dia_semana === DIA_ROTATIVO ? undefined : (horario.hora_fin || undefined),
             detalle: horario.detalle || null,
           })),
         })),
@@ -116,7 +112,7 @@ export default function AlumnoNuevoPage() {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error al crear estudiante');
     }
-  });
+  }, avisarFormularioInvalido);
 
   return (
     <div className="space-y-6">
